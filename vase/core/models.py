@@ -62,7 +62,7 @@ def env_dist_to_one_hot(env_dist: torch.Tensor, max_environments: int) -> torch.
 
 # Cell
 class Decoder(nn.Module):
-    def __init__(self, max_envs: int, latents=10):
+    def __init__(self, max_envs=0, latents=10):
         super().__init__()
         self.max_envs = max_envs
         self.latents = latents
@@ -75,7 +75,7 @@ class Decoder(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, z, s):
+    def forward(self, z, s=None):
         """
         Decode the latent and environmental variables
 
@@ -87,9 +87,10 @@ class Decoder(nn.Module):
             Means for (batchsize, widgt, height) Bernoulli's (which can be interpreted as the reconstructed image)
         """
         batch_size = z.shape[0]
-        s = s.expand(batch_size, -1)
-        z_s = torch.cat((z, s), dim=1)
-        x = self.relu(self.linear2(z_s)) # (batch_size, 256)
+        if s is not None:
+            s = s.expand(batch_size, -1)
+            z = torch.cat((z, s), dim=1)
+        x = self.relu(self.linear2(z)) # (batch_size, 256)
         x = self.relu(self.linear1(x)) # (batch_size, 512)
         x = x.reshape(-1, 128, 4, 4) # (batch_size, 128, 2, 2)
         x = self.relu(self.conv4(x)) # (batch_size, 128, 6, 6)
