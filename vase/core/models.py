@@ -113,7 +113,7 @@ class VanillaVAE(nn.Module):
         self.decoder = Decoder(latents=latents)
 
     def forward(self, x):
-        mu, logvar = self.encoder(x)
+        mu, logvar, _final = self.encoder(x)
         if self.training:
             z = reparam(mu, logvar)
         else:
