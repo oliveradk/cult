@@ -10,7 +10,8 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "MovingFashionMNIST": "01a_core.datasets.moving_mnist.ipynb",
          "Encoder": "02a_core.models.ipynb",
          "EnvironmentInference": "02a_core.models.ipynb",
-         "env_dist_to_one_hot": "02a_core.models.ipynb"}
+         "env_dist_to_one_hot": "02a_core.models.ipynb",
+         "Decoder": "02a_core.models.ipynb"}
 
 modules = ["config.py",
            "core/datasets/moving_mnist.py",
