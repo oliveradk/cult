@@ -11,11 +11,17 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "Encoder": "02a_core.models.ipynb",
          "EnvironmentInference": "02a_core.models.ipynb",
          "env_dist_to_one_hot": "02a_core.models.ipynb",
-         "Decoder": "02a_core.models.ipynb"}
+         "Decoder": "02a_core.models.ipynb",
+         "reparam": "02a_core.models.ipynb",
+         "VanillaVAE": "02a_core.models.ipynb",
+         "reconstruction_loss": "03a_core.train.ipynb",
+         "kl_div_stdnorm": "03a_core.train.ipynb",
+         "kl_div_target": "03a_core.train.ipynb"}
 
 modules = ["config.py",
            "core/datasets/moving_mnist.py",
-           "core/models.py"]
+           "core/models.py",
+           "core/train.py"]
 
 doc_url = "https://oliveradk.github.io/vase/"
 
