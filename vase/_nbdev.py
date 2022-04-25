@@ -17,6 +17,7 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "reparam": "02a_core.models.ipynb",
          "VanillaVAE": "02a_core.models.ipynb",
          "PaperVanillaVAE": "02a_core.models.ipynb",
+         "FCVAE": "02a_core.models.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
          "kl_div_stdnorm": "03a_core.train.ipynb",
          "kl_div_target": "03a_core.train.ipynb"}
