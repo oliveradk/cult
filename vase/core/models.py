@@ -22,7 +22,7 @@ class Encoder(nn.Module):
         self.conv4 = nn.Conv2d(128, 128, (4,4), 2, padding=1)
         self.linear = nn.Linear(2048, 256)
         self.linear_mu = nn.Linear(256, self.latents)
-        self.linear_sigma = nn.Linear(256, self.latents)
+        self.linear_logvar = nn.Linear(256, self.latents)
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -37,8 +37,8 @@ class Encoder(nn.Module):
         x = x.reshape(-1, 2048)
         final = self.relu(self.linear(x))
         mu = self.linear_mu(final)
-        sigma = torch.exp(self.linear_sigma(final))
-        return mu, sigma, final.detach() #detach to prevent gradient flow
+        logvar = self.linear_logvar(final)
+        return mu, logvar, final.detach() #detach to prevent gradient flow
 
 # Cell
 class FCEncoder(nn.Module):
@@ -48,14 +48,14 @@ class FCEncoder(nn.Module):
         self.latents = latents
         self.linear1 = nn.Linear(784, 50)
         self.linear_mu = nn.Linear(50, latents)
-        self.linear_sigma = nn.Linear(50, latents)
+        self.linear_logvar = nn.Linear(50, latents)
         self.act = nn.ReLU()
 
     def forward(self, x):
         x = x.reshape(-1, 784)
         final = self.act(self.linear1(x))
         mu = self.linear_mu(final)
-        logvar = torch.exp(self.linear_sigma(final)) #TODO: should this be exponentiated?
+        logvar = self.linear_logvar(final) #TODO: should this be exponentiated?
         return mu, logvar, final
 
 # Cell
