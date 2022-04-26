@@ -5,6 +5,8 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 index = {"PARENT_DIR": "00b_config.ipynb",
          "DATA_PATH": "00b_config.ipynb",
          "PARAM_PATH": "00b_config.ipynb",
+         "rec_likelihood": "00c_core.utils.ipynb",
+         "kl_div_stdnorm": "00c_core.utils.ipynb",
          "CommonMNIST": "01a_core.datasets.moving_mnist.ipynb",
          "CommonFashionMNIST": "01a_core.datasets.moving_mnist.ipynb",
          "MovingMNIST": "01a_core.datasets.moving_mnist.ipynb",
@@ -19,12 +21,11 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "VanillaVAE": "02a_core.models.ipynb",
          "PaperVanillaVAE": "02a_core.models.ipynb",
          "FCVAE": "02a_core.models.ipynb",
-         "rec_likelihood": "03a_core.train.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
-         "kl_div_stdnorm": "03a_core.train.ipynb",
          "kl_div_target": "03a_core.train.ipynb"}
 
 modules = ["config.py",
+           "core/utils.py",
            "core/datasets/moving_mnist.py",
            "core/models.py",
            "core/train.py"]
