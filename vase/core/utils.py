@@ -14,4 +14,4 @@ def rec_likelihood(x, x_rec):
 # Cell
 def kl_div_stdnorm(mu, logvar):
     """Returns element wise KL Divergence across batch"""
-    return .5 * torch.sum(1 + logvar - mu.pow(2) - logvar, dim=1)#torch.mean(0.5 * (logvar.exp() + mu.pow(2) - 1) - logvar) #NOTE: this might be off, other implementations scale logvar too #-.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()) #
+    return .5 * torch.sum(-(1 + logvar) + logvar.exp() + mu.pow(2), dim=1)#torch.mean(0.5 * (logvar.exp() + mu.pow(2) - 1) - logvar) #NOTE: this might be off, other implementations scale logvar too #-.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()) #
