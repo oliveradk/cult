@@ -21,6 +21,9 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "VanillaVAE": "02a_core.models.ipynb",
          "PaperVanillaVAE": "02a_core.models.ipynb",
          "FCVAE": "02a_core.models.ipynb",
+         "latent_mask": "02a_core.models.ipynb",
+         "apply_mask": "02a_core.models.ipynb",
+         "LatentMaskVAE": "02a_core.models.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
          "kl_div_target": "03a_core.train.ipynb"}
 
