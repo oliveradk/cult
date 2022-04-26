@@ -6,7 +6,7 @@ __all__ = ['reconstruction_loss', 'kl_div_stdnorm', 'kl_div_target']
 import torch
 from torch import nn
 from torch.nn import functional as F
-from ..config import DATA_PATH
+from ..config import DATA_PATH, PARAM_PATH
 
 
 # Cell

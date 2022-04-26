@@ -4,6 +4,7 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"PARENT_DIR": "00b_config.ipynb",
          "DATA_PATH": "00b_config.ipynb",
+         "PARAM_PATH": "00b_config.ipynb",
          "CommonMNIST": "01a_core.datasets.moving_mnist.ipynb",
          "CommonFashionMNIST": "01a_core.datasets.moving_mnist.ipynb",
          "MovingMNIST": "01a_core.datasets.moving_mnist.ipynb",
