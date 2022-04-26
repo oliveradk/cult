@@ -151,22 +151,23 @@ class FCDecoder(nn.Module):
         return out
 
 # Cell
-def reparam(mu, logvar):
-    eps = torch.randn(logvar.shape)
+def reparam(mu, logvar, device='cpu'):
+    eps = torch.randn(logvar.shape).to(device)
     std = (0.5 * logvar).exp()
     return mu + std * eps
 
 # Cell
 class VanillaVAE(nn.Module):
-    def __init__(self, encoder: type, decoder: type, latents: int):
+    def __init__(self, encoder: type, decoder: type, latents: int, device: str):
         super().__init__()
         self.encoder = encoder(latents=latents)
         self.decoder = decoder(latents=latents)
+        self.device = device
 
     def forward(self, x):
         mu, logvar, _final = self.encoder(x)
         if self.training:
-            z = reparam(mu, logvar)
+            z = reparam(mu, logvar, device=self.device)
         else:
             z = mu
         rec_img = self.decoder(z=z)
@@ -174,10 +175,10 @@ class VanillaVAE(nn.Module):
 
 # Cell
 class PaperVanillaVAE(VanillaVAE):
-    def __init__(self, latents: int):
-        super().__init__(encoder=Encoder, decoder=Decoder, latents=latents)
+    def __init__(self, latents: int, device:str):
+        super().__init__(encoder=Encoder, decoder=Decoder, latents=latents, device=device)
 
 # Cell
 class FCVAE(VanillaVAE):
-    def __init__(self, latents: int):
-        super().__init__(encoder=FCEncoder, decoder=FCDecoder, latents=latents)
+    def __init__(self, latents: int, device=device):
+        super().__init__(encoder=FCEncoder, decoder=FCDecoder, latents=latents, device=device)
