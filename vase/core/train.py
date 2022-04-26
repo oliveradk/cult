@@ -11,14 +11,15 @@ from ..config import DATA_PATH
 
 # Cell
 def reconstruction_loss(x, x_rec):
-    return F.binary_cross_entropy(x_rec, x, reduce=True)
+    """Returns element wise reconstruction loss across batch"""
+    return torch.mean(F.binary_cross_entropy(x_rec, x, reduction='none').flatten(start_dim=1).sum(dim=1))
 
 # Cell
 def kl_div_stdnorm(mu, logvar):
-    """Returns mean of KL Divergence across batch"""
-    return torch.mean(0.5 * (logvar.exp() + mu.pow(2) - 1) - logvar) #NOTE: this might be off, other implementations scale logvar too
+    """Returns element wise KL Divergence across batch"""
+    return .5 * torch.sum(1 + logvar - mu.pow(2) - logvar, dim=1)#torch.mean(0.5 * (logvar.exp() + mu.pow(2) - 1) - logvar) #NOTE: this might be off, other implementations scale logvar too #-.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()) #
 
 # Cell
 def kl_div_target(mu, logvar, C=0, gamma=1):
     """Returns target loss: squared difference of mean kldivergence and target C scaled by gamma"""
-    return gamma * ((kl_div_stdnorm(mu, logvar) - C).pow(2))
+    return gamma * torch.mean(torch.abs((kl_div_stdnorm(mu, logvar) - C)))
