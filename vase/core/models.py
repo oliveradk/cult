@@ -180,5 +180,5 @@ class PaperVanillaVAE(VanillaVAE):
 
 # Cell
 class FCVAE(VanillaVAE):
-    def __init__(self, latents: int, device=device):
+    def __init__(self, latents: int, device='cpu'):
         super().__init__(encoder=FCEncoder, decoder=FCDecoder, latents=latents, device=device)
