@@ -25,6 +25,7 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "latent_mask": "02a_core.models.ipynb",
          "apply_mask": "02a_core.models.ipynb",
          "LatentMaskVAE": "02a_core.models.ipynb",
+         "EnvInferVAE": "02a_core.models.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
          "kl_div_target": "03a_core.train.ipynb"}
 
