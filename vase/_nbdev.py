@@ -27,7 +27,10 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "LatentMaskVAE": "02a_core.models.ipynb",
          "EnvInferVAE": "02a_core.models.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
-         "kl_div_target": "03a_core.train.ipynb"}
+         "kl_div_target": "03a_core.train.ipynb",
+         "euclidean": "00c_core.utils.ipynb",
+         "encoder_proximity": "03a_core.train.ipynb",
+         "decoder_proximity": "03a_core.train.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
