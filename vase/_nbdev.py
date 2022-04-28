@@ -30,7 +30,10 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "kl_div_target": "03a_core.train.ipynb",
          "euclidean": "00c_core.utils.ipynb",
          "encoder_proximity": "03a_core.train.ipynb",
-         "decoder_proximity": "03a_core.train.ipynb"}
+         "decoder_proximity": "03a_core.train.ipynb",
+         "env_dist_to_idx": "02a_core.models.ipynb",
+         "generate_samples": "02a_core.models.ipynb",
+         "GenReplayVAE": "03a_core.train.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
