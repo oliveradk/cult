@@ -255,7 +255,7 @@ class EnvInferVAE(nn.Module):
         env_one_hot = F.one_hot(torch.tensor(env_idx, dtype=torch.int64), num_classes=self.max_envs)
 
         rec_img = self.decoder(z=masked_z, s=env_one_hot)
-        return rec_img, mu, logvar
+        return rec_img, mu, logvar, env_idx
 
     def infer_env(self, x, z, a, masked_z):
         # u = model.used(z)
@@ -270,22 +270,28 @@ class EnvInferVAE(nn.Module):
                 losses.append(torch.sum(rec_likelihood(x, x_rec)))
         env_idx = torch.argmin(torch.tensor(losses))
 
-        rec_loss = losses[env_idx] / batch_size
+        rec_loss = losses[env_idx]
+        avg_rec_loss = rec_loss / batch_size
 
-        if self.m == 0:
+        if self.env_count[0] == 0:
             self.env_count[self.m] += batch_size
             self.latent_masks.append(a)
-            self.rec_loss_avgs.append(rec_loss / batch_size)
+            self.rec_loss_avgs.append(avg_rec_loss)
             return self.m
-        if (rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equals(a, self.latent_masks[env_idx])) and self.m < self.max_envs-1:
+        elif (avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equal(a, self.latent_masks[env_idx])) and self.m < self.max_envs-1:
+            if avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx]:
+                print("New environment: anomolous reconstruction loss")
+            else:
+                print("New environment: latent masks did not match")
             self.m += 1
             self.env_count[self.m] += batch_size
             self.latent_masks.append(a)
-            self.rec_loss_avgs.append(rec_loss / batch_size)
+            self.rec_loss_avgs.append(avg_rec_loss)
             return self.m
-        #TODO add warning about exceeding max envs or something
-        self.env_count[env_idx] += batch_size
-        n = self.env_count[env_idx]
-        m = batch_size
-        self.rec_loss_avgs[env_idx] = self.rec_loss_avgs * ((n-m)/n) + rec_loss/n #cumulative average
-        return env_idx
+        else:
+            #TODO add warning about exceeding max envs or something
+            self.env_count[env_idx] += batch_size
+            n = self.env_count[env_idx]
+            m = batch_size
+            self.rec_loss_avgs[env_idx] = self.rec_loss_avgs[env_idx] * ((n-m)/n) + rec_loss/n #cumulative average
+            return env_idx
