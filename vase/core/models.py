@@ -2,7 +2,7 @@
 
 __all__ = ['Encoder', 'FCEncoder', 'EnvironmentInference', 'env_dist_to_idx', 'Decoder', 'FCDecoder', 'reparam',
            'VanillaVAE', 'PaperVanillaVAE', 'FCVAE', 'latent_mask', 'apply_mask', 'LatentMaskVAE', 'EnvInferVAE',
-           'generate_samples']
+           'generate_samples', 'GenReplayVAE']
 
 # Cell
 import torch
@@ -302,6 +302,26 @@ class EnvInferVAE(nn.Module):
 def generate_samples(vae: EnvInferVAE, batch_size: int):
     z = torch.randn(size=(batch_size, vae.latents))
     s = torch.randint(0, vae.m+1, (batch_size,))
-    s_one_hot = F.one_hot(s, num_classes=vae.m+1)
-    x_sample = vae.decoder(z, s_one_hot)
+    x_sample = vae.decoder(z, s)
     return x_sample
+
+# Cell
+class GenReplayVAE(nn.Module):
+    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, tau: int, device: str):
+        super().__init__()
+        self.tau = tau
+        self.model = EnvInferVAE(encoder, decoder, latents, max_envs, lam, kappa, device)
+        self.old_model = EnvInferVAE(encoder, decoder, latents, max_envs, lam, kappa, device)
+        self.old_model.train(False) #freezes old model
+        self.steps = 0
+
+    def forward(self, x):
+        return self.model(x)
+
+    def sample(self, batch_size, increment=True):
+        if increment:
+            self.steps +=1
+        if self.steps % self.tau == 0:
+            self.old_model.load_state_dict(self.model.state_dict())
+        samples = generate_samples(self.old_model, batch_size)
+        return samples
