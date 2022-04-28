@@ -257,7 +257,7 @@ class EnvInferVAE(nn.Module):
         s = torch.ones(batch_size, dtype=torch.int64) * env_idx
 
         rec_img = self.decoder(z=masked_z, s=s)
-        return rec_img, mu, logvar, env_idx
+        return rec_img, mu, logvar, env_idx, z
 
     def infer_env(self, x, z, a, masked_z):
         # u = model.used(z)
@@ -325,3 +325,9 @@ class GenReplayVAE(nn.Module):
             self.old_model.load_state_dict(self.model.state_dict())
         samples = generate_samples(self.old_model, batch_size)
         return samples
+
+    def forward_halu(self, x):
+        rec_X, _mu, _logvar, _env_idx, z = self.model(x)
+        old_rec_X, _old_mu, _old_logvar, _old_env_idx, old_z = self.old_model(x)
+        return rec_X, old_rec_X, z, old_z
+
