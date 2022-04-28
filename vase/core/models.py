@@ -277,15 +277,15 @@ class EnvInferVAE(nn.Module):
             self.latent_masks.append(a)
             self.rec_loss_avgs.append(rec_loss / batch_size)
             return self.m
-        if rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equals(a, self.latent_masks[env_idx]):
+        if (rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equals(a, self.latent_masks[env_idx])) and self.m < self.max_envs-1:
             self.m += 1
             self.env_count[self.m] += batch_size
             self.latent_masks.append(a)
             self.rec_loss_avgs.append(rec_loss / batch_size)
             return self.m
-        else:
-            self.env_count[env_idx] += batch_size
-            n = self.env_count[env_idx]
-            m = batch_size
-            self.rec_loss_avgs[env_idx] = self.rec_loss_avgs * ((n-m)/n) + rec_loss/n #cumulative average
-            return env_idx
+        #TODO add warning about exceeding max envs or something
+        self.env_count[env_idx] += batch_size
+        n = self.env_count[env_idx]
+        m = batch_size
+        self.rec_loss_avgs[env_idx] = self.rec_loss_avgs * ((n-m)/n) + rec_loss/n #cumulative average
+        return env_idx
