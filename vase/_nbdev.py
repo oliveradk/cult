@@ -33,7 +33,9 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "decoder_proximity": "03a_core.train.ipynb",
          "env_dist_to_idx": "02a_core.models.ipynb",
          "generate_samples": "02a_core.models.ipynb",
-         "GenReplayVAE": "02a_core.models.ipynb"}
+         "GenReplayVAE": "02a_core.models.ipynb",
+         "show": "00c_core.utils.ipynb",
+         "show_batch": "00c_core.utils.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
