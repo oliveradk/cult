@@ -188,12 +188,14 @@ class FCVAE(VanillaVAE):
 
 
 # Cell
-def latent_mask(z, lam):
+def latent_mask(z, lam, lam_1=1e-4, lam_2=.85):
     std, mean = torch.std_mean(z, dim=0)
     std = std[:,None]
     mean = mean[:, None]
     logvar = torch.log(std.pow(2))
     alphas = kl_div_stdnorm(mean, logvar)
+    alphas[alphas < lam_1] = 0
+    alphas[alphas > lam_2] = 1
     a = alphas < lam
     return a
 
