@@ -11,7 +11,7 @@ from torch.nn import functional as F
 import numpy as np
 
 from ..config import DATA_PATH
-from .utils import rec_likelihood, kl_div_stdnorm
+from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient
 
 # Cell
 class Encoder(nn.Module):
@@ -188,14 +188,14 @@ class FCVAE(VanillaVAE):
 
 
 # Cell
-def latent_mask(z, lam, lam_1=1e-4, lam_2=.85):
+def latent_mask(z, lam, lam_1=1e-4):
     std, mean = torch.std_mean(z, dim=0)
     std = std[:,None]
     mean = mean[:, None]
     logvar = torch.log(std.pow(2))
     alphas = kl_div_stdnorm(mean, logvar)
     alphas[alphas < lam_1] = 0
-    alphas[alphas > lam_2] = 1
+    #alphas[alphas > lam_2] = 1
     a = alphas < lam
     return a
 
@@ -278,19 +278,15 @@ class EnvInferVAE(nn.Module):
         avg_rec_loss = rec_loss / batch_size
 
         if self.env_count[0] == 0:
-            self.env_count[self.m] += batch_size
-            self.latent_masks.append(a)
-            self.rec_loss_avgs.append(avg_rec_loss)
+            self.init_env(batch_size, a, avg_rec_loss)
             return self.m
         elif (avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equal(a, self.latent_masks[env_idx])) and self.m < self.max_envs-1:
             if avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx]:
                 print("New environment: anomolous reconstruction loss")
             else:
                 print("New environment: latent masks did not match")
-            self.m += 1
-            self.env_count[self.m] += batch_size
-            self.latent_masks.append(a)
-            self.rec_loss_avgs.append(avg_rec_loss)
+            self.m +=1
+            self.init_env(batch_size, a, avg_rec_loss)
             return self.m
         else:
             #TODO add warning about exceeding max envs or something
@@ -300,36 +296,48 @@ class EnvInferVAE(nn.Module):
             self.rec_loss_avgs[env_idx] = self.rec_loss_avgs[env_idx] * ((n-m)/n) + rec_loss/n #cumulative average
             return env_idx
 
+    def init_env(self, batch_size, a, avg_rec_loss):
+        self.env_count[self.m] += batch_size
+        self.latent_masks.append(a)
+        self.rec_loss_avgs.append(avg_rec_loss)
+
+
+
 # Cell
-def generate_samples(vae: EnvInferVAE, batch_size: int):
+def generate_samples(vae: EnvInferVAE, batch_size: int, scale=1):
     z = torch.randn(size=(batch_size, vae.latents))
     s = torch.randint(0, vae.m+1, (batch_size,))
     x_sample = vae.decoder(z, s)
     return x_sample
 
 # Cell
-class GenReplayVAE(nn.Module):
-    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, tau: int, device: str):
-        super().__init__()
-        self.tau = tau
-        self.model = EnvInferVAE(encoder, decoder, latents, max_envs, lam, kappa, device)
-        self.old_model = EnvInferVAE(encoder, decoder, latents, max_envs, lam, kappa, device)
-        self.old_model.train(False) #freezes old model
-        self.steps = 0
-
-    def forward(self, x):
-        return self.model(x)
+class GenReplayVAE(EnvInferVAE):
+    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str):
+        self.encoder_type = encoder
+        self.decoder_type = decoder
+        super().__init__(encoder, decoder, latents, max_envs, lam, kappa, device)
+        self.old_model = []
 
     def sample(self, batch_size, increment=True):
-        if increment:
-            self.steps +=1
-        if self.steps % self.tau == 0:
-            self.old_model.load_state_dict(self.model.state_dict())
-        samples = generate_samples(self.old_model, batch_size)
+        if self.m == 0:
+            raise Exception("should not generate samples on current environment")
+        samples = generate_samples(self.old_model[0], batch_size)
         return samples
 
     def forward_halu(self, x):
-        rec_X, _mu, _logvar, _env_idx, z = self.model(x)
-        old_rec_X, _old_mu, _old_logvar, _old_env_idx, old_z = self.old_model(x)
+        rec_X, _mu, _logvar, _env_idx, z = self(x)
+        old_rec_X, _old_mu, _old_logvar, _old_env_idx, old_z = self.old_model[0](x)
         return rec_X, old_rec_X, z, old_z
 
+    def init_env(self, batch_size, a, avg_rec_loss):
+        if self.m > 0: #save current state of model for experience replay
+            old_model = self.copy_self(self.m-1)
+            disable_gradient(old_model)
+            self.old_model = [old_model]
+        super().init_env(batch_size, a, avg_rec_loss)
+
+    def copy_self(self, m):
+        copy = EnvInferVAE(self.encoder_type, self.decoder_type, self.latents, self.max_envs, self.lam, self.kappa, self.device)
+        copy.load_state_dict(self.state_dict())
+        copy.m = m
+        return copy
