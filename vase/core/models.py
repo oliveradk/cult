@@ -299,7 +299,7 @@ class EnvInferVAE(nn.Module):
             self.m +=1
             self.init_env(batch_size, a, u, avg_rec_loss)
             return self.m
-        elif not torch.equal(a * self.used_masks[env_idx], self.latent_masks[env_idx] * u) and self.m < self.max_envs-1:
+        elif not torch.equal(a * u, self.latent_masks[env_idx] * u) and self.m < self.max_envs-1: #note not sure if I should be comparing to "env_used"
             print("New environment: latent masks did not match")
             self.m +=1
             self.init_env(batch_size, a, u, avg_rec_loss)
