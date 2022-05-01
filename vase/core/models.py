@@ -2,7 +2,7 @@
 
 __all__ = ['Encoder', 'FCEncoder', 'EnvironmentInference', 'env_dist_to_idx', 'Decoder', 'FCDecoder', 'reparam',
            'VanillaVAE', 'PaperVanillaVAE', 'FCVAE', 'latent_mask', 'apply_mask', 'LatentMaskVAE', 'EnvInferVAE',
-           'generate_samples', 'GenReplayVAE']
+           'EnvInferGAVAE', 'generate_samples', 'GenReplayVAE']
 
 # Cell
 import torch
@@ -342,6 +342,37 @@ class EnvInferVAE(nn.Module):
         self.rec_loss_avgs.append(avg_rec_loss)
 
 
+
+# Cell
+class EnvInferGAVAE(EnvInferVAE):
+
+    def used_latents(self, batch, z, env_idx, batch_size, epochs, lr, Tau, delta):
+        optimizer = CMA(mean=np.zeros(self.latents), sigma=1.3)
+        s = torch.ones(batch_size, dtype=torch.int64) * env_idx
+        for generation in range(epochs):
+            solutions = []
+            for _ in range(optimizer.population_size):
+                x = optimizer.ask()
+                with torch.no_grad():
+                    sigma = torch.tensor(x, dtype=torch.float)
+                    sigma = torch.abs(sigma)
+                    eps = torch.randn(sigma.shape[0]) * sigma
+                    z_e = (1-delta) * z + (delta + eps)
+                    rec_batch = self.decoder(z_e, s)
+                    rec_loss = torch.mean(rec_likelihood(batch, rec_batch))
+                    sum_sigma = torch.sum(sigma)
+                    loss = rec_loss - sum_sigma
+                value = loss.detach().numpy()
+                solutions.append((x, value))
+                #print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+            optimizer.tell(solutions)
+
+            if generation % 25 == 0:
+                x_prime = sorted(solutions, key= lambda pair: pair[1], reverse=True)[0][0]
+        x_prime = sorted(solutions, key= lambda pair: pair[1], reverse=True)[0][0]
+        sigma_prime = torch.tensor(x_prime, dtype=torch.float).abs()
+        used = torch.argmin(sigma_prime)
+        return sigma_prime < Tau
 
 # Cell
 def generate_samples(vae: EnvInferVAE, batch_size: int):
