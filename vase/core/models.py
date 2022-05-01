@@ -11,7 +11,7 @@ from torch.nn import functional as F
 import numpy as np
 
 from ..config import DATA_PATH
-from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient
+from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient, enable_gradient
 
 # Cell
 class Encoder(nn.Module):
@@ -227,16 +227,22 @@ class LatentMaskVAE(VanillaVAE):
 
 # Cell
 class EnvInferVAE(nn.Module):
-    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str):
+    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str,
+        Tau: float=2, used_epochs: int=100, used_lr: float=1e-2, used_delta: float=.95):
         super().__init__()
         self.latents = latents
         self.m = 0
         self.max_envs = max_envs
         self.lam = lam
         self.kappa = kappa
+        self.Tau = Tau
+        self.used_epochs = used_epochs
+        self.used_lr = used_lr
+        self.used_delta = used_delta
         self.env_count = [0] * self.max_envs
         self.rec_loss_avgs = []
         self.latent_masks = []
+        self.used_masks = []
         self.used_masks = []
         self.encoder = encoder(latents=latents)
         self.decoder = decoder(latents=latents, max_envs=max_envs)
@@ -274,19 +280,26 @@ class EnvInferVAE(nn.Module):
                 losses.append(torch.sum(rec_likelihood(x, x_rec)))
         env_idx = torch.argmin(torch.tensor(losses))
 
+        #get used mask
+        u = self.used_latents(x, z, env_idx, batch_size, epochs=self.used_epochs, lr=self.used_lr, Tau=self.Tau, delta=self.used_delta)
+        if u.sum() > 0:
+            print("latents are used!")
+
         rec_loss = losses[env_idx]
         avg_rec_loss = rec_loss / batch_size
 
         if self.env_count[0] == 0:
-            self.init_env(batch_size, a, avg_rec_loss)
+            self.init_env(batch_size, a, u, avg_rec_loss)
             return self.m
-        elif (avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx] or not torch.equal(a, self.latent_masks[env_idx])) and self.m < self.max_envs-1:
-            if avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx]:
-                print("New environment: anomolous reconstruction loss")
-            else:
-                print("New environment: latent masks did not match")
+        elif avg_rec_loss > self.kappa * self.rec_loss_avgs[env_idx] and self.m < self.max_envs-1:
+            print("New environment: anomolous reconstruction loss")
             self.m +=1
-            self.init_env(batch_size, a, avg_rec_loss)
+            self.init_env(batch_size, a, u, avg_rec_loss)
+            return self.m
+        elif not torch.equal(a * self.used_masks[env_idx], self.latent_masks[env_idx] * u) and self.m < self.max_envs-1:
+            print("New environment: latent masks did not match")
+            self.m +=1
+            self.init_env(batch_size, a, u, avg_rec_loss)
             return self.m
         else:
             #TODO add warning about exceeding max envs or something
@@ -296,15 +309,40 @@ class EnvInferVAE(nn.Module):
             self.rec_loss_avgs[env_idx] = self.rec_loss_avgs[env_idx] * ((n-m)/n) + rec_loss/n #cumulative average
             return env_idx
 
-    def init_env(self, batch_size, a, avg_rec_loss):
+    def used_latents(self, batch, z, env_idx, batch_size, epochs, lr, Tau, delta):
+        sigma = torch.ones([self.latents]) #TODO: could change init scheme
+        sigma.requires_grad_(True)
+        disable_gradient(self.decoder)
+        optimizer = torch.optim.SGD(params=[sigma], lr=lr)
+        s = torch.ones(batch_size, dtype=torch.int64) * env_idx
+        for i in range(epochs):
+            optimizer.zero_grad()
+            eps = torch.randn(sigma.shape[0]) * sigma
+            z_e = (1-delta) * z + (delta + eps)
+            rec_batch = self.decoder(z_e, s)
+            rec_loss = torch.mean(rec_likelihood(batch, rec_batch))
+            sum_sigma = torch.sum(sigma)
+            loss = rec_loss - sum_sigma
+            loss.backward()
+            optimizer.step()
+            if i % 10 == 0:
+                pass
+                #print(sigma)
+                #print(loss)
+                #print(sigma.sum())
+        enable_gradient(self.decoder)
+        return sigma < Tau
+
+    def init_env(self, batch_size, a, u, avg_rec_loss):
         self.env_count[self.m] += batch_size
         self.latent_masks.append(a)
+        self.used_masks.append(u)
         self.rec_loss_avgs.append(avg_rec_loss)
 
 
 
 # Cell
-def generate_samples(vae: EnvInferVAE, batch_size: int, scale=1):
+def generate_samples(vae: EnvInferVAE, batch_size: int):
     z = torch.randn(size=(batch_size, vae.latents))
     s = torch.randint(0, vae.m+1, (batch_size,))
     x_sample = vae.decoder(z, s)
@@ -312,10 +350,11 @@ def generate_samples(vae: EnvInferVAE, batch_size: int, scale=1):
 
 # Cell
 class GenReplayVAE(EnvInferVAE):
-    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str):
+    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str,
+        Tau: float=2, used_epochs: int=100, used_lr: float=1e-2, used_delta: float=.95):
         self.encoder_type = encoder
         self.decoder_type = decoder
-        super().__init__(encoder, decoder, latents, max_envs, lam, kappa, device)
+        super().__init__(encoder, decoder, latents, max_envs, lam, kappa, device, Tau, used_epochs, used_lr, used_delta)
         self.old_model = []
 
     def sample(self, batch_size, increment=True):
@@ -329,12 +368,12 @@ class GenReplayVAE(EnvInferVAE):
         old_rec_X, _old_mu, _old_logvar, _old_env_idx, old_z = self.old_model[0](x)
         return rec_X, old_rec_X, z, old_z
 
-    def init_env(self, batch_size, a, avg_rec_loss):
+    def init_env(self, batch_size, a, u, avg_rec_loss):
         if self.m > 0: #save current state of model for experience replay
             old_model = self.copy_self(self.m-1)
             disable_gradient(old_model)
             self.old_model = [old_model]
-        super().init_env(batch_size, a, avg_rec_loss)
+        super().init_env(batch_size, a, u, avg_rec_loss)
 
     def copy_self(self, m):
         copy = EnvInferVAE(self.encoder_type, self.decoder_type, self.latents, self.max_envs, self.lam, self.kappa, self.device)
