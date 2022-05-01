@@ -9,6 +9,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 import numpy as np
+import copy
 
 from ..config import DATA_PATH
 from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient, enable_gradient
@@ -312,7 +313,8 @@ class EnvInferVAE(nn.Module):
     def used_latents(self, batch, z, env_idx, batch_size, epochs, lr, Tau, delta):
         sigma = torch.ones([self.latents]) #TODO: could change init scheme
         sigma.requires_grad_(True)
-        disable_gradient(self.decoder)
+        decoder_copy = copy.deepcopy(self.decoder)
+        disable_gradient(decoder_copy)
         optimizer = torch.optim.SGD(params=[sigma], lr=lr)
         s = torch.ones(batch_size, dtype=torch.int64) * env_idx
         for i in range(epochs):
@@ -323,14 +325,13 @@ class EnvInferVAE(nn.Module):
             rec_loss = torch.mean(rec_likelihood(batch, rec_batch))
             sum_sigma = torch.sum(sigma)
             loss = rec_loss - sum_sigma
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
             if i % 10 == 0:
                 pass
                 #print(sigma)
                 #print(loss)
                 #print(sigma.sum())
-        enable_gradient(self.decoder)
         return sigma < Tau
 
     def init_env(self, batch_size, a, u, avg_rec_loss):
