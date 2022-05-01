@@ -201,10 +201,12 @@ def latent_mask(z, lam, lam_1=1e-4):
     return a
 
 # Cell
-def apply_mask(a, z):
-    masked_z = torch.clone(z)
-    masked_z[:, ~a] = 0
-    return masked_z
+def apply_mask(a, z, mu, logvar):
+    std_norm = torch.randn(z.shape)
+    z = a * z + (~a) * std_norm # "reparam" trick again
+    mu[:,~a] = 0
+    logvar[:,~a] = 0
+    return z, mu, logvar
 
 # Cell
 class LatentMaskVAE(VanillaVAE):
@@ -221,9 +223,9 @@ class LatentMaskVAE(VanillaVAE):
 
         #latent masking
         a = latent_mask(z, self.lam)
-        masked_z = apply_mask(a, z)
+        z, mu, logvar = apply_mask(a, z, mu, logvar)
 
-        rec_img = self.decoder(z=masked_z)
+        rec_img = self.decoder(z=z)
         return rec_img, mu, logvar
 
 # Cell
@@ -259,16 +261,16 @@ class EnvInferVAE(nn.Module):
 
         #latent masking
         a = latent_mask(z, self.lam)
-        masked_z = apply_mask(a, z)
+        z, mu, logvar = apply_mask(a, z, mu, logvar)
 
         #infer environment
-        env_idx = self.infer_env(x, z, a, masked_z)
+        env_idx = self.infer_env(x, z, a)
         s = torch.ones(batch_size, dtype=torch.int64) * env_idx
 
-        rec_img = self.decoder(z=masked_z, s=s)
+        rec_img = self.decoder(z=z, s=s)
         return rec_img, mu, logvar, env_idx, z
 
-    def infer_env(self, x, z, a, masked_z):
+    def infer_env(self, x, z, a):
         # u = model.used(z)
         batch_size = x.shape[0]
 
@@ -277,14 +279,14 @@ class EnvInferVAE(nn.Module):
         for s_i in range(self.m+1):
             s = torch.ones(batch_size, dtype=torch.int64) * s_i
             with torch.no_grad():
-                x_rec = self.decoder(masked_z, s)
+                x_rec = self.decoder(z, s)
                 losses.append(torch.sum(rec_likelihood(x, x_rec)))
         env_idx = torch.argmin(torch.tensor(losses))
 
         #get used mask
         u = self.used_latents(x, z, env_idx, batch_size, epochs=self.used_epochs, lr=self.used_lr, Tau=self.Tau, delta=self.used_delta)
-        if u.sum() > 0:
-            print("latents are used!")
+        if u.sum() == 0:
+            print("some latent(s) are not used!")
 
         rec_loss = losses[env_idx]
         avg_rec_loss = rec_loss / batch_size
