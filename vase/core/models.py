@@ -313,6 +313,7 @@ class EnvInferVAE(nn.Module):
     def used_latents(self, batch, z, env_idx, batch_size, epochs, lr, Tau, delta):
         sigma = torch.zeros([self.latents]) #TODO: could change init scheme
         sigma.requires_grad_(True)
+        disable_gradient(self.decoder)
         decoder_copy = copy.deepcopy(self.decoder)
         disable_gradient(decoder_copy)
         optimizer = torch.optim.SGD(params=[sigma], lr=lr)
