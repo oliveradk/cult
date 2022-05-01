@@ -307,13 +307,11 @@ class EnvInferVAE(nn.Module):
         else:
             #TODO add warning about exceeding max envs or something
             self.env_count[env_idx] += batch_size
-            n = self.env_count[env_idx]
-            m = batch_size
-            self.rec_loss_avgs[env_idx] = self.rec_loss_avgs[env_idx] * ((n-m)/n) + rec_loss/n #cumulative average
+            self.rec_loss_avgs[env_idx] = rec_loss #cumulative average
             return env_idx
 
     def used_latents(self, batch, z, env_idx, batch_size, epochs, lr, Tau, delta):
-        sigma = torch.ones([self.latents]) #TODO: could change init scheme
+        sigma = torch.zeros([self.latents]) #TODO: could change init scheme
         sigma.requires_grad_(True)
         decoder_copy = copy.deepcopy(self.decoder)
         disable_gradient(decoder_copy)
