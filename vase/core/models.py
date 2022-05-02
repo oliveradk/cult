@@ -198,7 +198,7 @@ def latent_mask(z, lam, lam_1=1e-4):
     alphas[alphas < lam_1] = 0
     #alphas[alphas > lam_2] = 1
     a = alphas < lam
-    return a
+    return a, alphas
 
 # Cell
 def apply_mask(a, z, mu, logvar):
@@ -222,11 +222,11 @@ class LatentMaskVAE(VanillaVAE):
             z = mu
 
         #latent masking
-        a = latent_mask(z, self.lam)
+        a, alphas = latent_mask(z, self.lam)
         z, mu, logvar = apply_mask(a, z, mu, logvar)
 
         rec_img = self.decoder(z=z)
-        return rec_img, mu, logvar
+        return rec_img, mu, logvar, alphas
 
 # Cell
 class EnvInferVAE(nn.Module):
@@ -258,7 +258,7 @@ class EnvInferVAE(nn.Module):
             z = mu
 
         #latent masking
-        a = latent_mask(z, self.lam)
+        a, alphas = latent_mask(z, self.lam)
         z, mu, logvar = apply_mask(a, z, mu, logvar)
 
         #infer environment
@@ -266,22 +266,18 @@ class EnvInferVAE(nn.Module):
         s = torch.ones(batch_size, dtype=torch.int64) * env_idx
 
         rec_img = self.decoder(z=z, s=s)
-        return rec_img, mu, logvar, env_idx, z
+        return rec_img, mu, logvar, env_idx, z, alphas
 
     def infer_env(self, x, z, a):
         # u = model.used(z)
         batch_size = x.shape[0]
 
-        #get maximum likelihood environment using "analysis by synthesis"
-        losses = []
-        for s_i in range(self.m+1):
-            s = torch.ones(batch_size, dtype=torch.int64) * s_i
-            with torch.no_grad():
-                x_rec = self.decoder(z, s)
-                losses.append(torch.sum(rec_likelihood(x, x_rec)))
-        env_idx = torch.argmin(torch.tensor(losses))
+        env_idx = self.get_env_idx(x, z, batch_size)
 
-        rec_loss = losses[env_idx]
+        s = torch.ones(batch_size, dtype=torch.int64) * env_idx
+        with torch.no_grad():
+            x_rec = self.decoder(z, s)
+        rec_loss = torch.sum(rec_likelihood(x, x_rec))
         avg_rec_loss = rec_loss / batch_size
 
         if self.env_count[0] == 0:
@@ -339,6 +335,17 @@ class EnvInferVAE(nn.Module):
                 #print(sigma.sum())
         return sigma < Tau
 
+    def get_env_idx(self, x, z, batch_size):
+        """get maximum likelihood environment using "analysis by synthesis"""
+        losses = []
+        for s_i in range(self.m+1):
+            s = torch.ones(batch_size, dtype=torch.int64) * s_i
+            with torch.no_grad():
+                x_rec = self.decoder(z, s)
+                losses.append(torch.sum(rec_likelihood(x, x_rec)))
+        env_idx = torch.argmin(torch.tensor(losses))
+        return env_idx
+
     def init_env(self, batch_size, a, avg_rec_loss):
         self.env_count[self.m] += batch_size
         self.latent_masks.append(a)
@@ -386,10 +393,13 @@ def generate_samples(vae: EnvInferVAE, batch_size: int):
 
 # Cell
 class GenReplayVAE(EnvInferVAE):
-    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, device: str,
+    def __init__(self, encoder: type, decoder: type, latents: int, max_envs: int, lam: float, kappa: float, final_size: int, device: str,
         Tau: float=2, used_epochs: int=100, used_lr: float=1e-2, used_delta: float=.95):
         self.encoder_type = encoder
         self.decoder_type = decoder
+        self.env_network = EnvironmentInference(max_envs, final_size)
+        self.env_optim = torch.optim.Adam(params=self.env_network.parameters(), lr=6e-4)
+        self.last_preds = None
         super().__init__(encoder, decoder, latents, max_envs, lam, kappa, device, Tau, used_epochs, used_lr, used_delta)
         self.old_model = []
 
@@ -398,6 +408,19 @@ class GenReplayVAE(EnvInferVAE):
             raise Exception("should not generate samples on current environment")
         samples = generate_samples(self.old_model[0], batch_size)
         return samples
+
+    def get_env_idx(self, x, z, batch_size):
+        env_preds = self.env_network(x) #batch_size x max_envs
+        env_idx = torch.argmax(env_preds.mean(dim=0))
+        self.last_preds = env_preds
+        return env_idx
+
+    def train_env_inf_network(env_idx, halu_X, halu_y):
+        cur_env_labels = torch.ones([self.last_labels.shape[0]])
+        cur_loss = nn.CrossEntropyLoss()(self.last_labels, cur_env_labels)
+
+
+
 
     def forward_halu(self, x):
         rec_X, _mu, _logvar, _env_idx, z = self(x)

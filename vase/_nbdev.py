@@ -44,7 +44,8 @@ modules = ["config.py",
            "core/utils.py",
            "core/datasets/moving_mnist.py",
            "core/models.py",
-           "core/train.py"]
+           "core/train.py",
+           "core/vase_model.py"]
 
 doc_url = "https://oliveradk.github.io/vase/"
 
