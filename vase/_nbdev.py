@@ -38,7 +38,9 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "show_batch": "00c_core.utils.ipynb",
          "disable_gradient": "00c_core.utils.ipynb",
          "enable_gradient": "00c_core.utils.ipynb",
-         "EnvInferGAVAE": "02a_core.models.ipynb"}
+         "EnvInferGAVAE": "02a_core.models.ipynb",
+         "LOG_PATH": "00b_config.ipynb",
+         "VASE": "02b_core.vase_model.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
