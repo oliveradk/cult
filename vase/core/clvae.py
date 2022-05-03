@@ -23,7 +23,8 @@ class CLVAE(nn.Module):
         final_size: int,
         latents: int,
         max_envs: int,
-        atyp_thresh: float,
+        atyp_min: float,
+        atyp_max: float,
         env_optim: type,
         env_lr: float,
         env_epochs: int,
@@ -34,7 +35,8 @@ class CLVAE(nn.Module):
         self.latents = latents
         self.max_envs = max_envs
         self.final_size = final_size
-        self.atyp_thresh = atyp_thresh
+        self.atyp_min = atyp_min
+        self.atyp_max = atyp_max
         self.device = device
         self.encoder = encoder_type(self.latents, device=self.device)
         self.decoder = decoder_type(self.latents, self.max_envs, device=self.device)
@@ -69,7 +71,7 @@ class CLVAE(nn.Module):
             mu_halu_old, logvar_halu_old, final_halu_old = self.old_encoder(x_halu)
             mu_halu, logvar_halu, final_halu = self.encoder(x_halu)
             rec_x_halo = self.decoder(mu_halu, s_halu)
-            return rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp
+            return rec_x, mu, logvar, x_halu, rec_x_halo, mu_halu_old, mu_halu, s_halu, atyp
 
         s = self.m if self.m != -1 else 0
         z = self.reparam(mu, logvar)
@@ -78,17 +80,19 @@ class CLVAE(nn.Module):
         atyp = self.get_atyp(z)
 
         if self.m == -1:
-            if atyp > self.atyp_thresh:
+            if atyp > self.atyp_max:
                 self.m = 0
                 self.learning = True
 
         elif self.learning:
-            if atyp < self.atyp_thresh:
+            if atyp < self.atyp_min:
                 self.learning = False
 
-        elif atyp > self.atyp_thresh:
+        elif atyp > self.atyp_max:
             self.learning = True
             self.m += 1
+            if self.m > self.max_envs:
+                print("Warning: too many environments")
             self.copy_and_freeze()
 
 
@@ -100,7 +104,8 @@ class CLVAE(nn.Module):
         z_halu = self.reparam(mu_halu, logvar_halu)
         rec_x_halo = self.decoder(z_halu, s_halu)
 
-        self.train_env_network(final, s, final_halu_old, s_halu)
+        if self.training:
+            self.train_env_network(final, s, final_halu_old, s_halu)
 
         return rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp
 
