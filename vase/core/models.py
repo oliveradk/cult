@@ -16,7 +16,7 @@ from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient, enable_grad
 
 # Cell
 class Encoder(nn.Module):
-    def __init__(self, latents=10):
+    def __init__(self, latents=10, device='cpu'):
         super().__init__()
         self.latents = latents
         #NOTE: no pooling? should compare results with and without
@@ -28,6 +28,7 @@ class Encoder(nn.Module):
         self.linear_mu = nn.Linear(256, self.latents)
         self.linear_logvar = nn.Linear(256, self.latents)
         self.relu = nn.ReLU()
+        self.device = device
 
     def forward(self, x):
         """
@@ -46,7 +47,7 @@ class Encoder(nn.Module):
 
 # Cell
 class FCEncoder(nn.Module):
-    def __init__(self, latents: int):
+    def __init__(self, latents: int, device='cpu'):
         super().__init__()
         self.latents = latents
         self.latents = latents
@@ -54,6 +55,7 @@ class FCEncoder(nn.Module):
         self.linear_mu = nn.Linear(50, latents)
         self.linear_logvar = nn.Linear(50, latents)
         self.act = nn.ReLU()
+        self.device = device
 
     def forward(self, x):
         x = x.reshape(-1, 784)
@@ -86,7 +88,7 @@ def env_dist_to_idx(env_dist: torch.Tensor, max_environments: int) -> torch.Tens
 
 # Cell
 class Decoder(nn.Module):
-    def __init__(self, latents:int, max_envs=0):
+    def __init__(self, latents:int, max_envs=0, device='cpu'):
         super().__init__()
         self.max_envs = max_envs
         self.latents = latents
@@ -98,6 +100,7 @@ class Decoder(nn.Module):
         self.conv1 = nn.ConvTranspose2d(64, 1, (4,4), 2, padding=1)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
+        self.device = device
 
     def forward(self, z, s=None):
         """
@@ -112,7 +115,7 @@ class Decoder(nn.Module):
         """
 
         if s is not None:
-            s_one_hot = F.one_hot(s, num_classes=self.max_envs)
+            s_one_hot = F.one_hot(s, num_classes=self.max_envs).to(self.device)
             z = torch.cat((z, s_one_hot), dim=1)
         x = self.relu(self.linear2(z)) # (batch_size, 256)
         x = self.relu(self.linear1(x)) # (batch_size, 512)
@@ -125,7 +128,7 @@ class Decoder(nn.Module):
 
 # Cell
 class FCDecoder(nn.Module):
-    def __init__(self, latents: int, max_envs=0):
+    def __init__(self, latents: int, max_envs=0, device='cpu'):
         super().__init__()
         self.max_envs = max_envs
         self.latents = latents
@@ -133,6 +136,7 @@ class FCDecoder(nn.Module):
         self.linear2 = nn.Linear(50, 784)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
+        self.device = device
 
     def forward(self, z, s=None):
         """
@@ -146,7 +150,7 @@ class FCDecoder(nn.Module):
             Means for (batchsize, widgt, height) Bernoulli's (which can be interpreted as the reconstructed image)
         """
         if s is not None:
-            s_one_hot = F.one_hot(s, num_classes=self.max_envs)
+            s_one_hot = F.one_hot(s, num_classes=self.max_envs).to(self.device)
             z = torch.cat((z, s_one_hot), dim=1)
         x = self.relu(self.linear1(z))
         x = self.linear2(x)
