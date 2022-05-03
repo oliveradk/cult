@@ -40,14 +40,16 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "enable_gradient": "00c_core.utils.ipynb",
          "EnvInferGAVAE": "02a_core.models.ipynb",
          "LOG_PATH": "00b_config.ipynb",
-         "VASE": "02b_core.vase_model.ipynb"}
+         "VASE": "02b_core.vase_model.ipynb",
+         "CLVAE": "02c_core.clvae.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
            "core/datasets/moving_mnist.py",
            "core/models.py",
            "core/train.py",
-           "core/vase_model.py"]
+           "core/vase_model.py",
+           "core/clvae.py"]
 
 doc_url = "https://oliveradk.github.io/vase/"
 
