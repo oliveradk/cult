@@ -69,18 +69,21 @@ class CNNEncoder(nn.Module):
     def __init__(self, latents: int, device='cpu'):
         super().__init__()
         self.latents = latents
-        self.conv1 = nn.Conv2d(1, 32, 4, 2, padding=1)
-        self.conv2 = nn.Conv2d(32, 32, 4, 2)
+        self.conv1 = nn.Conv2d(1, 32, (4,4), stride=2, padding=1)
+        self.conv2 = nn.Conv2d(32, 32, (4,4), 2, padding=0)
+        self.conv3 = nn.Conv2d(32, 64, (4,4), 2, padding=0)
         self.flatten = nn.Flatten()
-        self.linear1 = nn.Linear(1152, 128)
-        self.linear_mu = nn.Linear(128, latents)
-        self.linear_logvar = nn.Linear(128, latents)
+        self.linear1 = nn.Linear(256, 64)
+        self.linear_mu = nn.Linear(64, latents)
+        self.linear_logvar = nn.Linear(64, latents)
         self.act = nn.ReLU()
         self.device = device
 
     def forward(self, x):
         x = self.act(self.conv1(x))
         x = self.act(self.conv2(x))
+        x = self.act(self.conv3(x))
+        #x = self.act(self.conv4(x))
         x = self.flatten(x)
         final = self.act(self.linear1(x))
         mu = self.linear_mu(final)
@@ -187,10 +190,11 @@ class CNNDecoder(nn.Module):
         super().__init__()
         self.max_envs = max_envs
         self.latents = latents
-        self.linear1 = nn.Linear(latents + max_envs, 128)
-        self.linear2 = nn.Linear(128, 1152)
-        self.conv1 = nn.ConvTranspose2d(32, 32, 4, 2)
-        self.conv2 = nn.ConvTranspose2d(32, 1, 4, 2, 1)
+        self.linear1 = nn.Linear(latents + max_envs, 64)
+        self.linear2 = nn.Linear(64, 256)
+        self.conv1 = nn.ConvTranspose2d(64, 32, (4,4), 2)
+        self.conv2 = nn.ConvTranspose2d(32, 32, (4,4), 2)
+        self.conv3 = nn.ConvTranspose2d(32, 1, (4,4), 2, 1)
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
         self.device = device
@@ -211,9 +215,10 @@ class CNNDecoder(nn.Module):
             z = torch.cat((z, s_one_hot), dim=1)
         x = self.relu(self.linear1(z))
         x = self.relu(self.linear2(x))
-        x = x.reshape(-1, 32, 6, 6)
+        x = x.reshape(-1, 64, 2, 2)
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
+        x = self.conv3(x)
         out = self.sigmoid(x)
         return out
 
