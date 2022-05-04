@@ -11,6 +11,7 @@ import torchvision
 import numpy as np
 import matplotlib.pyplot as plt
 from ..config import PARAM_PATH
+import os
 
 # Cell
 def rec_likelihood(x, x_rec):
