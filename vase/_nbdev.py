@@ -46,7 +46,12 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "encoder_proximity": "03a_core.train.ipynb",
          "decoder_proximity": "03a_core.train.ipynb",
          "CNNEncoder": "02a_core.models.ipynb",
-         "CNNDecoder": "02a_core.models.ipynb"}
+         "CNNDecoder": "02a_core.models.ipynb",
+         "accuracy": "02c_core.clvae.ipynb",
+         "mnist_test": "02c_core.clvae.ipynb",
+         "fashion_test": "02c_core.clvae.ipynb",
+         "mnist_test_loader": "02c_core.clvae.ipynb",
+         "fashion_test_loader": "02c_core.clvae.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
