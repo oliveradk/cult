@@ -10,10 +10,27 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
-      title: Life-Long Disentagled Representation Learning with Cross Domain Latent
-        Homologies
-      url: core.html
+      title: Config
+      url: config.html
+    - output: web,pdf
+      title: Utility Functions
+      url: core.utils.html
+    - output: web,pdf
+      title: Moving MNIST
+      url: core.datasets.moving_mnist.html
+    - output: web,pdf
+      title: Models
+      url: core.models.html
+    - output: web,pdf
+      title: Vase Model
+      url: core.vase.html
+    - output: web,pdf
+      title: Continually Learning Variational Autoencoder
+      url: core.cult.html
+    - output: web,pdf
+      title: Training For VASE
+      url: core.train.html
     output: web
-    title: lifelong_disrep
+    title: cult
   output: web
   title: Sidebar

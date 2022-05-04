@@ -1,6 +1,12 @@
 {
-  "lifelong_disrep": {
+  "cult": {
     "Overview": "/",
-    "Life-Long Disentagled Representation Learning with Cross Domain Latent Homologies": "core.html"
+    "Config": "config.html",
+    "Utility Functions": "core.utils.html",
+    "Moving MNIST": "core.datasets.moving_mnist.html",
+    "Models": "core.models.html",
+    "Vase Model": "core.vase.html",
+    "Continually Learning Variational Autoencoder": "core.cult.html",
+    "Training For VASE": "core.train.html"
   }
 }
