@@ -10,7 +10,7 @@ from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import ToTensor
 from PIL import Image
 
-from vase.config import DATA_PATH
+from ...config import DATA_PATH
 
 # Cell
 class CommonMNIST(MNIST):

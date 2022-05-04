@@ -11,9 +11,9 @@ import os
 import numpy as np
 import copy
 
-from vase.core.models import FCEncoder, FCDecoder, Encoder, Decoder, EnvironmentInference
-from vase.core.utils import rec_likelihood, disable_gradient, kl_div_stdnorm, euclidean, show_batch
-from vase.config import DATA_PATH, LOG_PATH
+from .models import FCEncoder, FCDecoder, Encoder, Decoder, EnvironmentInference
+from .utils import rec_likelihood, disable_gradient, kl_div_stdnorm, euclidean, show_batch
+from ..config import DATA_PATH, LOG_PATH
 
 # Cell
 class VASE(nn.Module):
