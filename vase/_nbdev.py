@@ -44,7 +44,9 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "reconstruction_loss": "03a_core.train.ipynb",
          "kl_div_target": "03a_core.train.ipynb",
          "encoder_proximity": "03a_core.train.ipynb",
-         "decoder_proximity": "03a_core.train.ipynb"}
+         "decoder_proximity": "03a_core.train.ipynb",
+         "CNNEncoder": "02a_core.models.ipynb",
+         "CNNDecoder": "02a_core.models.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
