@@ -41,7 +41,9 @@ index = {"PARENT_DIR": "00b_config.ipynb",
          "EnvInferGAVAE": "02a_core.models.ipynb",
          "LOG_PATH": "00b_config.ipynb",
          "VASE": "02b_core.vase_model.ipynb",
-         "CLVAE": "02c_core.clvae.ipynb"}
+         "CLVAE": "02c_core.clvae.ipynb",
+         "save_model": "00c_core.utils.ipynb",
+         "load_model": "00c_core.utils.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
