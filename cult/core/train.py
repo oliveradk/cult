@@ -6,8 +6,8 @@ __all__ = ['reconstruction_loss', 'kl_div_target', 'encoder_proximity', 'decoder
 import torch
 from torch import nn
 from torch.nn import functional as F
-from vase.config import DATA_PATH, PARAM_PATH
-from vase.core.utils import rec_likelihood, kl_div_stdnorm, euclidean
+from ..config import DATA_PATH, PARAM_PATH
+from .utils import rec_likelihood, kl_div_stdnorm, euclidean
 
 
 # Cell
