@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 from cmaes import CMA
 import os
 import numpy as np
+import copy
 
 from .models import FCEncoder, FCDecoder, Encoder, Decoder, EnvironmentInference
 from .utils import rec_likelihood, disable_gradient, kl_div_stdnorm, euclidean, show_batch
@@ -41,16 +42,17 @@ class VASE(nn.Module):
         self.max_envs = max_envs
         self.final_size = final_size
         self.device = device
-        self.encoder = encoder_type(self.latents)
-        self.decoder = decoder_type(self.latents, self.max_envs)
-        self.old_encoder = encoder_type(self.latents)
-        self.old_decoder = decoder_type(self.latents, self.max_envs)
+        self.encoder = encoder_type(self.latents, device=self.device)
+        self.decoder = decoder_type(self.latents, self.max_envs, device=self.device)
+        self.old_encoder = encoder_type(self.latents, device=self.device)
+        self.old_decoder = decoder_type(self.latents, self.max_envs, device=self.device)
         self.copy_and_freeze()
         self.encoder.to(self.device), self.decoder.to(self.device), self.old_encoder.to(self.device), self.old_decoder.to(self.device)
         self.steps = 0
         self.tau = tau
         self.replay_batch_size = replay_batch_size
         self.env_net = EnvironmentInference(self.max_envs, self.final_size)
+        self.env_net.to(self.device)
         self.m = 0
         self.env_optim = env_optim(params=self.env_net.parameters(), lr=env_lr)
         self.env_loss = nn.CrossEntropyLoss()
@@ -79,7 +81,7 @@ class VASE(nn.Module):
         a, alphas = self.get_mask(z)
         masked_z, masked_mu, masked_logvar = self.apply_mask(z, a, mu, logvar)
 
-        s = self.infer_env(x, batch_size, masked_z, s_hat, a)
+        s = self.infer_env(x, batch_size, masked_z, s_hat, a, z)
 
         rec_x = self.decoder(masked_z, self.int_to_vec(s, batch_size))
 
@@ -104,7 +106,7 @@ class VASE(nn.Module):
         if self.tau and self.steps > self.tau:
             self.copy_and_freeze()
 
-        return rec_x, masked_mu, masked_logvar, x_halu, masked_z_halu_old, rec_x_halo, masked_z_halu
+        return rec_x, masked_mu, masked_logvar, x_halu, masked_z_halu_old, rec_x_halo, masked_z_halu, alphas
 
     def get_mask(self, z):
         std, mean = torch.std_mean(z, dim=0)
@@ -112,27 +114,29 @@ class VASE(nn.Module):
         mean = mean[:, None]
         logvar = torch.log(std.pow(2))
         alphas = kl_div_stdnorm(mean, logvar)
-        alphas[alphas < self.lam_1] = 0
-        alphas[alphas > self.lam_2] = 1
+        # alphas[alphas < self.lam_1] = 0
+        # alphas[alphas > self.lam_2] = 1
         a = alphas < self.lam
+        a[alphas > self.lam_2] = 1
         return a, alphas
 
     def get_likely_env(self, final):
         env_logits = self.env_net(final)
         avg_env_logits = torch.mean(env_logits, dim=0)
-        return torch.argmax(avg_env_logits), env_logits
+        valid_logits = avg_env_logits[0:self.m+1]
+        return torch.argmax(valid_logits), env_logits
 
     def reparam(self, mu, logvar):
         eps = torch.randn(logvar.shape).to(self.device)
         std = (0.5 * logvar).exp()
         return mu + std * eps
 
-    def infer_env(self, x, batch_size, masked_z, s_hat, a):
+    def infer_env(self, x, batch_size, masked_z, s_hat, a, z):
         with torch.no_grad():
             rec_x = self.decoder(masked_z, self.int_to_vec(s_hat, batch_size))
         rec_loss = torch.mean(rec_likelihood(x, rec_x))
 
-        if self.m == 0:
+        if len(self.rec_losses) == 0:
             self.init_env(rec_loss, a)
             return 0
 
@@ -142,23 +146,23 @@ class VASE(nn.Module):
 
         if rec_loss > self.kappa * self.rec_losses[s_hat]:
             self.m+=1
-            self.init_env(rec_x, a)
+            self.init_env(rec_loss, a)
             return self.m
 
-        if a != self.masks[s_hat]:
-            u = self.get_used_mask(s_hat)
-            if a * u != self.masks[s_hat] * u:
+        if not torch.equal(a, self.masks[s_hat]):
+            u = self.get_used_mask(x, batch_size, z, s_hat)
+            if not torch.equal(a * u, self.masks[s_hat] * u):
               self.m+=1
-              self.init_env(rec_x, a)
+              self.init_env(rec_loss, a)
               return self.m
 
         self.update_env(rec_loss, a, s_hat)
         return s_hat
 
-    def init_env(self, rec_x, a):
+    def init_env(self, rec_loss, a):
         if self.tau is None:
             self.copy_and_freeze()
-        self.rec_losses.append(rec_x)
+        self.rec_losses.append(rec_loss)
         self.masks.append(a)
 
     def update_env(self, rec_loss, a, s):
@@ -166,6 +170,9 @@ class VASE(nn.Module):
         self.masks[s] = a
 
     def get_used_mask(self, x, batch_size, z, s_hat):
+        x = copy.copy(x).to('cpu')
+        z = copy.copy(z).to('cpu')
+        s_hat = copy.copy(s_hat).to('cpu')
         optimizer = CMA(mean=np.zeros(self.latents), sigma=self.used_sigma)
         s_vec = self.int_to_vec(s_hat, batch_size)
         for generation in range(self.used_epochs):
@@ -173,7 +180,7 @@ class VASE(nn.Module):
             for _ in range(optimizer.population_size):
                 sigma_a = optimizer.ask()
                 with torch.no_grad():
-                    sigma_t = torch.tensor(x, dtype=torch.float)
+                    sigma_t = torch.tensor(sigma_a, dtype=torch.float)
                     sigma_t = torch.abs(sigma_t)
                     eps = torch.randn(sigma_t.shape[0]) * sigma_t
                     z_e = (1-self.used_delta) * z + (self.used_delta + eps)
@@ -186,15 +193,17 @@ class VASE(nn.Module):
             optimizer.tell(solutions)
         sigma_p_a = sorted(solutions, key=lambda pair: pair[1], reverse=True)[0][0]
         sigma_p_t = torch.tensor(sigma_p_a, dtype=torch.float).abs()
+        u = sigma_p_t < self.Tau
+        u = u.to(self.device)
         return sigma_p_t < self.Tau
 
 
     def int_to_vec(self, i, size):
-        return torch.ones([size], dtype=torch.int64) * i
+        return torch.ones([size], dtype=torch.int64).to(self.device) * i
 
     def apply_mask(self, z, a, mu, logvar):
         #TODO: verify it broadcasts correctly in both cases
-        std_norm = torch.randn(z.shape)
+        std_norm = torch.randn(z.shape).to(self.device)
         masked_z = a * z + (~a) * std_norm # "reparam" trick again
         masked_mu = mu * a
         masked_logvar = logvar * a
@@ -227,8 +236,8 @@ class VASE(nn.Module):
         self.env_optim.step()
 
     def sample_old(self):
-        s = torch.randint(0, self.m+1, (self.replay_batch_size,))
-        z = torch.randn([self.replay_batch_size, self.latents])
+        s = torch.randint(0, self.m+1, (self.replay_batch_size,)).to(self.device)
+        z = torch.randn([self.replay_batch_size, self.latents]).to(self.device)
         with torch.no_grad():
             halu_x = self.old_decoder(z, s)
         return halu_x, s
