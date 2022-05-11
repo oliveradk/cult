@@ -6,7 +6,6 @@ __all__ = ['CULT', 'LatentClassifier', 'CULTTrainer']
 import torch
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
-from cmaes import CMA
 import os
 import numpy as np
 import copy
@@ -45,9 +44,9 @@ class CULT(nn.Module):
         self.copy_and_freeze()
         self.encoder.to(self.device), self.decoder.to(self.device), self.old_encoder.to(self.device), self.old_decoder.to(self.device)
         self.replay_batch_size = replay_batch_size
-        self.env_net = EnvironmentInference(self.max_envs, self.final_size)
-        self.env_net.to(self.device)
-        self.env_optim = env_optim(params=self.env_net.parameters(), lr=env_lr)
+        self.env_lr = env_lr
+        self.env_optim_type = env_optim
+        self.reset_env_net()
         self.env_loss = nn.CrossEntropyLoss()
         self.env_epochs = env_epochs
 
@@ -94,6 +93,7 @@ class CULT(nn.Module):
             if self.m > self.max_envs:
                 print("Warning: too many environments")
             self.copy_and_freeze()
+            self.reset_env_net()
 
 
         with torch.no_grad():
@@ -104,10 +104,9 @@ class CULT(nn.Module):
         z_halu = self.reparam(mu_halu, logvar_halu)
         rec_x_halo = self.decoder(z_halu, s_halu)
 
-        if self.training:
-            self.train_env_network(final, s, final_halu_old, s_halu)
+        avg_env_loss, env_acc = self.train_env_network(final, s, final_halu_old, s_halu) if self.training else 0
 
-        return rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp
+        return rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp, avg_env_loss, env_acc
 
     def get_likely_env(self, final):
         env_logits = self.env_net(final)
@@ -145,19 +144,34 @@ class CULT(nn.Module):
         self.freeze_model(self.old_decoder)
 
     def train_env_network(self, final, s, final_halu_old, s_halu):
-        env_logits = self.env_net(final)
-        final_halu_old = final_halu_old[s != s_halu]
-        s_halu = s_halu[s != s_halu]
-        self.env_optim.zero_grad()
-        cur_loss = self.env_loss(env_logits, self.int_to_vec(s, env_logits.shape[0])) #don't know if dims work here
-        if len(s_halu) > 0:
-            env_logits_halu = self.env_net(final_halu_old)
-            replay_loss = self.env_loss(env_logits_halu, s_halu)
-        else:
-            replay_loss = 0
-        loss = cur_loss + replay_loss
-        loss.backward(retain_graph=True)
-        self.env_optim.step()
+        total_env_loss = 0
+        total_acc = 0
+        total_logits = 0
+        for epoch in range(self.env_epochs):
+            self.env_optim.zero_grad()
+            env_logits = self.env_net(final)
+            final_halu_old = final_halu_old[s != s_halu]
+            s_halu = s_halu[s != s_halu]
+            cur_loss = self.env_loss(env_logits, self.int_to_vec(s, env_logits.shape[0])) #don't know if dims work here
+            if len(s_halu) > 0:
+                env_logits_halu = self.env_net(final_halu_old)
+                replay_loss = self.env_loss(env_logits_halu, s_halu)
+            else:
+                replay_loss = 0
+            loss = cur_loss + 2 * replay_loss #TODO: set as hyperparam
+            loss.backward(retain_graph=True)
+            total_env_loss += loss
+            self.env_optim.step()
+            env_accc = (torch.argmax(env_logits, dim=1) == s).sum()
+            halu_acc = (torch.argmax(env_logits_halu) == s_halu).sum() if len(s_halu) > 0 else 0
+            total_acc += env_accc + halu_acc
+            total_logits += env_logits.shape[0] + env_logits_halu.shape[0] if len(s_halu) > 0 else env_logits.shape[0]
+        return total_env_loss / self.env_epochs, total_acc / total_logits
+
+    def reset_env_net(self):
+        self.env_net = EnvironmentInference(self.max_envs, self.final_size)
+        self.env_optim = self.env_optim_type(params=self.env_net.parameters(), lr=self.env_lr, weight_decay=1e-1)
+        self.env_net.to(self.device)
 
     def sample_old(self):
         max_env = self.m+1 if self.m != -1 else 1
@@ -228,7 +242,7 @@ class CULTTrainer():
                 X = X.to(self.device)
                 self.optimizer.zero_grad()
 
-                rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp = self.model(X)
+                rec_x, mu, logvar, x_halu, rec_x_halo, z_halu_old, z_halu, s_halu, atyp, avg_env_loss, env_acc = self.model(X)
 
                 rec_loss = torch.mean(rec_likelihood(X, rec_x))
                 kl_loss = self.kl_scale * torch.mean(torch.square(kl_div_stdnorm(mu, logvar))) #NOTE: should I square this?
@@ -254,6 +268,13 @@ class CULTTrainer():
                 self.writer.add_scalar("train/d_prox_loss", d_prox_loss, self.model.steps)
                 self.writer.add_scalar("train/num_envs", self.model.m+1, self.model.steps)
                 self.writer.add_scalar("train/atypicality", atyp, self.model.steps)
+                self.writer.add_scalar("train/avg_env_loss", avg_env_loss, self.model.steps)
+                self.writer.add_scalar("train/avg_env_acc", env_acc, self.model.steps)
+                fashion_env_acc = self._env_accuracy(fashion_test_batch, 0)
+                self.writer.add_scalar("train/fashion_env_acc", fashion_env_acc, self.model.steps)
+                if self.model.m >= 1:
+                    mnist_env_acc = self._env_accuracy(mnist_test_batch, 1)
+                    self.writer.add_scalar("train/mnist_env_acc", mnist_env_acc, self.model.steps)
                 total_loss += loss
                 total_rec_loss += rec_loss
                 total_div_loss += kl_loss
@@ -302,4 +323,15 @@ class CULTTrainer():
                 logits = classifier(Z)
             y_hat = torch.argmax(logits, dim=1)
             total_acc += (y_test == y_hat).sum()
+        return total_acc / size
+
+    def _env_accuracy(self, batch, label):
+        total_acc = 0
+        size = 0
+        with torch.no_grad():
+            _, _, final = self.model.encoder(batch)
+            logits = self.model.env_net(final)
+            acc = (torch.argmax(logits, dim=1) == label).sum()
+            total_acc += acc
+            size += logits.shape[0]
         return total_acc / size
