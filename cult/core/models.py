@@ -92,15 +92,22 @@ class CNNEncoder(nn.Module):
 
 # Cell
 class EnvironmentInference(nn.Module):
-    def __init__(self, max_environmnets: int, input_dim:int):
+    def __init__(self, max_environmnets: int, input_dim:int, hidden_dim=50):
         super().__init__()
         self.max_environments = max_environmnets
         self.input_dim = input_dim
-        self.linear = nn.Linear(input_dim, max_environmnets)
+        # self.linear1 = nn.Linear(input_dim, hidden_dim)
+        # self.linear2 = nn.Linear(hidden_dim, self.max_environments)
+        self.linear = nn.Linear(input_dim, self.max_environments)
+        self.dropout = nn.Dropout(p=.5)
         self.softmax = nn.Softmax(dim=1)
+        self.relu = nn.ReLU()
 
     def forward(self, final_latent):
+        # x = self.relu(self.linear1(final_latent))
+        # logits = self.linear2(x)
         x = self.linear(final_latent)
+        x = self.dropout(x)
         return self.softmax(x)
 
 # Cell
