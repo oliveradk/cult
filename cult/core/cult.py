@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 import os
 import numpy as np
 import copy
+from tqdm import tqdm
 
 from .models import FCEncoder, FCDecoder, CNNEncoder, CNNDecoder, EnvironmentInference
 from .utils import rec_likelihood, disable_gradient, kl_div_stdnorm, euclidean, show_batch, save_model, load_model
@@ -29,6 +30,7 @@ class CULT(nn.Module):
         env_epochs: int,
         replay_batch_size: int,
         device: str,
+        steps_per_reset: int=None,
     ):
         super().__init__()
         self.latents = latents
@@ -49,6 +51,7 @@ class CULT(nn.Module):
         self.reset_env_net()
         self.env_loss = nn.CrossEntropyLoss()
         self.env_epochs = env_epochs
+        self.steps_per_reset = steps_per_reset
 
         self.m = -1
         self.steps = 0
@@ -92,6 +95,11 @@ class CULT(nn.Module):
             self.m += 1
             if self.m > self.max_envs:
                 print("Warning: too many environments")
+            if self.steps_per_reset is None:
+                self.copy_and_freeze()
+                self.reset_env_net()
+
+        if self.steps_per_reset is not None and self.steps % self.steps_per_reset == 0:
             self.copy_and_freeze()
             self.reset_env_net()
 
@@ -215,12 +223,13 @@ class CULTTrainer():
         env_epochs: int,
         replay_batch_size: int,
         steps_per_save: int,
-        device: str
+        device: str,
+        steps_per_reset: int=None
     ):
         self.name = name
         self.device = device
-        self.model = CULT(encoder_type, decoder_type, final_size, latents, max_envs, atyp_min, atyp_max, env_optim, env_lr, env_epochs, replay_batch_size, device)
-        self.snap_model = CULT(encoder_type, decoder_type, final_size, latents, max_envs, atyp_min, atyp_max, env_optim, env_lr, env_epochs, replay_batch_size, device)
+        self.model = CULT(encoder_type, decoder_type, final_size, latents, max_envs, atyp_min, atyp_max, env_optim, env_lr, env_epochs, replay_batch_size, device, steps_per_reset)
+        self.snap_model = CULT(encoder_type, decoder_type, final_size, latents, max_envs, atyp_min, atyp_max, env_optim, env_lr, env_epochs, replay_batch_size, device, steps_per_reset)
         #TODO: add toggle for step based gen model update
         self.optimizer = optim_type(params=self.model.parameters(), lr=lr)
         self.kl_scale = kl_scale
@@ -232,7 +241,7 @@ class CULTTrainer():
         if not os.path.isdir(self.param_dir):
             os.mkdir(self.param_dir)
 
-    def train(self, loader, epochs, verbose=True):
+    def train(self, loader, epochs, test_batches, verbose=True):
         for epoch in range(epochs):
             total_loss = 0
             total_rec_loss = 0
@@ -270,16 +279,16 @@ class CULTTrainer():
                 self.writer.add_scalar("train/atypicality", atyp, self.model.steps)
                 self.writer.add_scalar("train/avg_env_loss", avg_env_loss, self.model.steps)
                 self.writer.add_scalar("train/avg_env_acc", env_acc, self.model.steps)
-                fashion_env_acc = self._env_accuracy(fashion_test_batch, 0)
-                self.writer.add_scalar("train/fashion_env_acc", fashion_env_acc, self.model.steps)
-                if self.model.m >= 1:
-                    mnist_env_acc = self._env_accuracy(mnist_test_batch, 1)
-                    self.writer.add_scalar("train/mnist_env_acc", mnist_env_acc, self.model.steps)
+                for i in range(self.model.m+1):
+                    if i+1 > len(test_batches):
+                        break
+                    acc = self._env_accuracy(test_batches[i], i)
+                    self.writer.add_scalar(f"train/env_{i}_acc", acc, self.model.steps)
                 total_loss += loss
                 total_rec_loss += rec_loss
                 total_div_loss += kl_loss
             if verbose:
-                print(f"epoch: {epoch}, loss={total_loss/batch_size}, rec_loss={total_rec_loss/batch_size}, total_div_loss={total_div_loss/batch_size}")
+                print(f"epoch: {epoch}, loss={total_loss/len(loader)}, rec_loss={total_rec_loss/len(loader)}, total_div_loss={total_div_loss/len(loader)}")
 
 
     def train_latent_classifiers(self, train_loaders, test_loaders, names, n_classes_list, epochs=10, hidden_size=50, lr=1e-3, verbose=True): #TODO: allow for simultaneous training on n datasets
@@ -335,3 +344,27 @@ class CULTTrainer():
             total_acc += acc
             size += logits.shape[0]
         return total_acc / size
+
+    def env_accuracy(self, loader, label):
+        total_acc = 0
+        size = 0
+        for X, _ in loader:
+            with torch.no_grad():
+                _, _, final = self.model.encoder(X)
+                logits = self.model.env_net(final)
+                acc = (torch.argmax(logits, dim=1) == label).sum()
+                total_acc += acc
+                size += logits.shape[0]
+        return total_acc / size
+
+    def rec_loss(self, test_loader):
+        total_rec_loss = 0
+        data_size = 0
+        for X, _ in test_loader:
+            with torch.no_grad():
+                model_out = self.model(X)
+                rec_X = model_out[0]
+                rec_loss = rec_likelihood(X, rec_X).sum()
+                total_rec_loss += rec_loss
+                data_size += X.shape[0]
+        return total_rec_loss / data_size
