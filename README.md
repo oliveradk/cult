@@ -16,4 +16,4 @@ NOTE: This repo is a work in progress - in particular the vase algorithm from Ac
 
 ## Experiments
 
-The primary experiment(s) are run in `02_core.cult.ipynb`
+The primary experiment(s) are run in `03a_experiments.cult_experiments.ipynb`
