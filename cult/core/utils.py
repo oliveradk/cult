@@ -20,11 +20,12 @@ def rec_likelihood(x, x_rec):
 
 # Cell
 def kl_div_stdnorm(mu, logvar):
-    """Returns element wise KL Divergence across batch"""
-    return .5 * torch.sum(-(1 + logvar) + logvar.exp() + mu.pow(2), dim=1)#torch.mean(0.5 * (logvar.exp() + mu.pow(2) - 1) - logvar) #NOTE: this might be off, other implementations scale logvar too #-.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp()) #
+    """Returns element wise KL Divergence between standard normal and gaussian parameterized by (`mu`, `logvar`) across batch"""
+    return .5 * torch.sum(-(1 + logvar) + logvar.exp() + mu.pow(2), dim=1)
 
 # Cell
 def euclidean(x_1, x_2):
+    """batch-wise euclidean distance"""
     return (x_1-x_2).pow(2).sum(1).sqrt()
 
 # Cell
@@ -51,18 +52,22 @@ def show_batch(batch: torch.Tensor):
 
 # Cell
 def disable_gradient(model: nn.Module):
+    """disable the gradients of a model"""
     for layer in model.children():
         layer.requires_grad_(False)
 
 # Cell
 def enable_gradient(model: nn.Module):
+    """enable the gradients of a model"""
     for layer in model.children():
         layer.requires_grad_(True)
 
 # Cell
 def save_model(model, path):
+     f"""save `model` to subdir of PARAM_PATH given by `path`"""
      torch.save(model.state_dict(), os.path.join(PARAM_PATH, path))
 
 # Cell
 def load_model(model, path):
+    """save `model` to subdir of PARAM_PATH given by `path`"""
     model.load_state_dict(torch.load(os.path.join(PARAM_PATH, path)))
