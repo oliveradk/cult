@@ -32,7 +32,7 @@ index = {"PARENT_DIR": "00a_config.ipynb",
          "CNNDecoder": "02a_core.models.ipynb",
          "reparam": "02a_core.models.ipynb",
          "VanillaVAE": "02a_core.models.ipynb",
-         "PaperVanillaVAE": "02a_core.models.ipynb",
+         "CNNVanillaVAE": "02a_core.models.ipynb",
          "FCVAE": "02a_core.models.ipynb",
          "latent_mask": "02a_core.models.ipynb",
          "apply_mask": "02a_core.models.ipynb",
@@ -41,24 +41,15 @@ index = {"PARENT_DIR": "00a_config.ipynb",
          "EnvInferGAVAE": "02a_core.models.ipynb",
          "generate_samples": "02a_core.models.ipynb",
          "GenReplayVAE": "02a_core.models.ipynb",
-         "VASE": "02b_core.vase.ipynb",
-         "CULT": "02c_core.cult.ipynb",
-         "LatentClassifier": "02c_core.cult.ipynb",
-         "train_classifier": "02c_core.cult.ipynb",
-         "accuracy": "02c_core.cult.ipynb",
-         "reconstruction_loss": "03a_core.train.ipynb",
-         "kl_div_target": "03a_core.train.ipynb",
-         "encoder_proximity": "03a_core.train.ipynb",
-         "decoder_proximity": "03a_core.train.ipynb",
-         "CULTTrainer": "02c_core.cult.ipynb"}
+         "CULT": "02b_core.cult.ipynb",
+         "LatentClassifier": "02b_core.cult.ipynb",
+         "CULTTrainer": "02b_core.cult.ipynb"}
 
 modules = ["config.py",
            "core/utils.py",
            "core/datasets/moving_mnist.py",
            "core/models.py",
-           "core/vase_model.py",
-           "core/cult.py",
-           "core/train.py"]
+           "core/cult.py"]
 
 doc_url = "https://oliveradk.github.io/cult/"
 
