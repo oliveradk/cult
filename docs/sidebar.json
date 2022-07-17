@@ -5,8 +5,8 @@
     "Utility Functions": "core.utils.html",
     "Moving MNIST": "core.datasets.moving_mnist.html",
     "Models": "core.models.html",
-    "Vase Model": "core.vase.html",
     "Continually Learning Variational Autoencoder": "core.cult.html",
-    "Training For VASE": "core.train.html"
+    "Cult Experiments": "experiments.cult_experiments.html",
+    "Load TB Data to DataFrame": "format_data.html"
   }
 }

@@ -22,14 +22,14 @@ entries:
       title: Models
       url: core.models.html
     - output: web,pdf
-      title: Vase Model
-      url: core.vase.html
-    - output: web,pdf
       title: Continually Learning Variational Autoencoder
       url: core.cult.html
     - output: web,pdf
-      title: Training For VASE
-      url: core.train.html
+      title: Cult Experiments
+      url: experiments.cult_experiments.html
+    - output: web,pdf
+      title: Load TB Data to DataFrame
+      url: format_data.html
     output: web
     title: cult
   output: web

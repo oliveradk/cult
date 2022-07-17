@@ -175,7 +175,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="FCEncoder" class="doc_header"><code>class</code> <code>FCEncoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L49" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCEncoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
+<h2 id="FCEncoder" class="doc_header"><code>class</code> <code>FCEncoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L48" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCEncoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -291,7 +291,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="CNNEncoder" class="doc_header"><code>class</code> <code>CNNEncoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L68" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>CNNEncoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
+<h2 id="CNNEncoder" class="doc_header"><code>class</code> <code>CNNEncoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L67" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>CNNEncoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -376,9 +376,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Environmental-Inference-Network">Environmental Inference Network<a class="anchor-link" href="#Environmental-Inference-Network"> </a></h2><p>NOTE: not sure if this receives the $\mu$'s or the layer before the $\mu's$ - I think the layer before?</p>
-<p>Section A.1: "We attach an additional fully connected layer to the last layer of the encoder (gradients to the encoder are stopped)."</p>
-
+<h2 id="Environmental-Inference-Network">Environmental Inference Network<a class="anchor-link" href="#Environmental-Inference-Network"> </a></h2>
 </div>
 </div>
 </div>
@@ -393,7 +391,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="EnvironmentInference" class="doc_header"><code>class</code> <code>EnvironmentInference</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L94" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvironmentInference</code>(<strong><code>max_environmnets</code></strong>:<code>int</code>, <strong><code>input_dim</code></strong>:<code>int</code>) :: <code>Module</code></p>
+<h2 id="EnvironmentInference" class="doc_header"><code>class</code> <code>EnvironmentInference</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L93" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvironmentInference</code>(<strong><code>max_environmnets</code></strong>:<code>int</code>, <strong><code>input_dim</code></strong>:<code>int</code>, <strong><code>hidden_dim</code></strong>=<em><code>50</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -612,7 +610,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>tensor(11)</pre>
+<pre>tensor(16)</pre>
 </div>
 
 </div>
@@ -645,7 +643,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+<pre>tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0])</pre>
 </div>
 
@@ -668,7 +666,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="env_dist_to_idx" class="doc_header"><code>env_dist_to_idx</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L107" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>env_dist_to_idx</code>(<strong><code>env_dist</code></strong>:<code>Tensor</code>, <strong><code>max_environments</code></strong>:<code>int</code>)</p>
+<h4 id="env_dist_to_idx" class="doc_header"><code>env_dist_to_idx</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L109" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>env_dist_to_idx</code>(<strong><code>env_dist</code></strong>:<code>Tensor</code>, <strong><code>max_environments</code></strong>:<code>int</code>)</p>
 </blockquote>
 <p>Converts a batch of distributions to a one-hot vector</p>
 
@@ -749,7 +747,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="Decoder" class="doc_header"><code>class</code> <code>Decoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L116" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Decoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
+<h2 id="Decoder" class="doc_header"><code>class</code> <code>Decoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L118" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Decoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -996,7 +994,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="FCDecoder" class="doc_header"><code>class</code> <code>FCDecoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L156" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCDecoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
+<h2 id="FCDecoder" class="doc_header"><code>class</code> <code>FCDecoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L158" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCDecoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -1244,7 +1242,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="CNNDecoder" class="doc_header"><code>class</code> <code>CNNDecoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L188" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>CNNDecoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
+<h2 id="CNNDecoder" class="doc_header"><code>class</code> <code>CNNDecoder</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L190" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>CNNDecoder</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>=<em><code>0</code></em>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -1405,8 +1403,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Reparameterization-Trick">Reparameterization Trick<a class="anchor-link" href="#Reparameterization-Trick"> </a></h3><p>TODO: explain why you have to do this to compute gradients</p>
-
+<h3 id="Reparameterization-Trick">Reparameterization Trick<a class="anchor-link" href="#Reparameterization-Trick"> </a></h3>
 </div>
 </div>
 </div>
@@ -1421,7 +1418,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="reparam" class="doc_header"><code>reparam</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L226" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>reparam</code>(<strong><code>mu</code></strong>, <strong><code>logvar</code></strong>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>)</p>
+<h4 id="reparam" class="doc_header"><code>reparam</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L228" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>reparam</code>(<strong><code>mu</code></strong>, <strong><code>logvar</code></strong>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>)</p>
 </blockquote>
 
 </div>
@@ -1458,7 +1455,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="VanillaVAE" class="doc_header"><code>class</code> <code>VanillaVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L232" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>VanillaVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>) :: <code>Module</code></p>
+<h2 id="VanillaVAE" class="doc_header"><code>class</code> <code>VanillaVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L234" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>VanillaVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -1516,7 +1513,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="PaperVanillaVAE" class="doc_header"><code>class</code> <code>PaperVanillaVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L249" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>PaperVanillaVAE</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
+<h2 id="CNNVanillaVAE" class="doc_header"><code>class</code> <code>CNNVanillaVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L251" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>CNNVanillaVAE</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -1587,7 +1584,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">vvae</span> <span class="o">=</span> <span class="n">PaperVanillaVAE</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="n">latents</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">vvae</span> <span class="o">=</span> <span class="n">CNNVanillaVAE</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="n">latents</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -1907,7 +1904,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="FCVAE" class="doc_header"><code>class</code> <code>FCVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L254" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCVAE</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
+<h2 id="FCVAE" class="doc_header"><code>class</code> <code>FCVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L256" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>FCVAE</code>(<strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>=<em><code>'cpu'</code></em>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -2407,7 +2404,7 @@ $$\bar{z}_n = \frac{1}{B} \sum_{b=1}^{B} q_{\phi}(z_n|x_b)$$
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="latent_mask" class="doc_header"><code>latent_mask</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L260" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>latent_mask</code>(<strong><code>z</code></strong>, <strong><code>lam</code></strong>, <strong><code>lam_1</code></strong>=<em><code>0.0001</code></em>)</p>
+<h4 id="latent_mask" class="doc_header"><code>latent_mask</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L262" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>latent_mask</code>(<strong><code>z</code></strong>, <strong><code>lam</code></strong>, <strong><code>lam_1</code></strong>=<em><code>0.0001</code></em>)</p>
 </blockquote>
 
 </div>
@@ -2624,7 +2621,7 @@ $$q(z^s|x^s) = a^s \cdot \mathcal{N}(\mu(x), \sigma(x)) + (1-a^s) \cdot \mathcal
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="apply_mask" class="doc_header"><code>apply_mask</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L272" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>apply_mask</code>(<strong><code>a</code></strong>, <strong><code>z</code></strong>, <strong><code>mu</code></strong>, <strong><code>logvar</code></strong>)</p>
+<h4 id="apply_mask" class="doc_header"><code>apply_mask</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L274" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>apply_mask</code>(<strong><code>a</code></strong>, <strong><code>z</code></strong>, <strong><code>mu</code></strong>, <strong><code>logvar</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -2655,7 +2652,7 @@ $$q(z^s|x^s) = a^s \cdot \mathcal{N}(\mu(x), \sigma(x)) + (1-a^s) \cdot \mathcal
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="LatentMaskVAE" class="doc_header"><code>class</code> <code>LatentMaskVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L280" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>LatentMaskVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>lam</code></strong>:<code>float</code>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
+<h2 id="LatentMaskVAE" class="doc_header"><code>class</code> <code>LatentMaskVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L282" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>LatentMaskVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>lam</code></strong>:<code>float</code>) :: <a href="/cult/core.models.html#VanillaVAE"><code>VanillaVAE</code></a></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -3433,7 +3430,7 @@ tensor(-0.0202, grad_fn=&lt;SumBackward0&gt;)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="EnvInferVAE" class="doc_header"><code>class</code> <code>EnvInferVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L300" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvInferVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <code>Module</code></p>
+<h2 id="EnvInferVAE" class="doc_header"><code>class</code> <code>EnvInferVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L302" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvInferVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -3491,7 +3488,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="EnvInferGAVAE" class="doc_header"><code>class</code> <code>EnvInferGAVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L425" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvInferGAVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a></p>
+<h2 id="EnvInferGAVAE" class="doc_header"><code>class</code> <code>EnvInferGAVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L427" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>EnvInferGAVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -3804,7 +3801,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="generate_samples" class="doc_header"><code>generate_samples</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L456" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>generate_samples</code>(<strong><code>vae</code></strong>:<a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a>, <strong><code>batch_size</code></strong>:<code>int</code>)</p>
+<h4 id="generate_samples" class="doc_header"><code>generate_samples</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L458" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>generate_samples</code>(<strong><code>vae</code></strong>:<a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a>, <strong><code>batch_size</code></strong>:<code>int</code>)</p>
 </blockquote>
 
 </div>
@@ -3919,7 +3916,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="GenReplayVAE" class="doc_header"><code>class</code> <code>GenReplayVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L463" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>GenReplayVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>final_size</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a></p>
+<h2 id="GenReplayVAE" class="doc_header"><code>class</code> <code>GenReplayVAE</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/models.py#L465" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>GenReplayVAE</code>(<strong><code>encoder</code></strong>:<code>type</code>, <strong><code>decoder</code></strong>:<code>type</code>, <strong><code>latents</code></strong>:<code>int</code>, <strong><code>max_envs</code></strong>:<code>int</code>, <strong><code>lam</code></strong>:<code>float</code>, <strong><code>kappa</code></strong>:<code>float</code>, <strong><code>final_size</code></strong>:<code>int</code>, <strong><code>device</code></strong>:<code>str</code>, <strong><code>Tau</code></strong>:<code>float</code>=<em><code>2</code></em>, <strong><code>used_epochs</code></strong>:<code>int</code>=<em><code>100</code></em>, <strong><code>used_lr</code></strong>:<code>float</code>=<em><code>0.01</code></em>, <strong><code>used_delta</code></strong>:<code>float</code>=<em><code>0.95</code></em>) :: <a href="/cult/core.models.html#EnvInferVAE"><code>EnvInferVAE</code></a></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>

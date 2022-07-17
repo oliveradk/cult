@@ -38,7 +38,7 @@ nb_path: "00b_core.utils.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Reconstruction-Likelihood">Reconstruction Likelihood<a class="anchor-link" href="#Reconstruction-Likelihood"> </a></h2><p>We'll use Binary Cross Entropy Loss with $y$ the ground truth image $x$, and $p(y)$ the reconstructed image. In terms of log likelihood, I'm not really sure how this makes sense, but it seems to be how its done... (TODO figure this out)</p>
+<h2 id="Reconstruction-Likelihood">Reconstruction Likelihood<a class="anchor-link" href="#Reconstruction-Likelihood"> </a></h2><p>We use binary cross entropy loss with $y$ the ground truth image $x$, and $p(y)$ the reconstructed image.</p>
 
 </div>
 </div>
@@ -94,23 +94,22 @@ nb_path: "00b_core.utils.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="KL-Divergence-Std-Norm">KL Divergence Std Norm<a class="anchor-link" href="#KL-Divergence-Std-Norm"> </a></h2><p>Recall the definition of KL Divergence is the expected value under the reference distribution of the information ratio (or something like that):</p>
+<h2 id="KL-Divergence-Std-Norm">KL Divergence Std Norm<a class="anchor-link" href="#KL-Divergence-Std-Norm"> </a></h2><p>Recall the definition of KL Divergence is the expected value under the reference distribution of the information ratio:</p>
 <p>{% raw %}
 $$D_{KL}(q||p) = E_q[\log{\frac{q}{p}}] $$
 {% endraw %}</p>
 <p>So in our case, with
 {% raw %}
-$$KL(q_{\phi}(\mathbf{z}|\mathbf{x})||p(z))$$
+$$KL(q_{\phi}(z|x)||p(z))$$
 {% endraw %}
 we have</p>
 <p>{% raw %}
-$$KL(q_{\phi}(\mathbf{z}|\mathbf{x})||p(z)) = E_{q_{\phi}(\mathbf{z}|x)}[\log{q_{\phi}(\mathbf{z}|\mathbf{x})} - \log{p(z)}]$$
+$$KL(q_{\phi}(z|x)||p(z)) = E_{q_{\phi}(z|x)}[\log{q_{\phi}(z|x)} - \log{p(z)}]$$
 {% endraw %}</p>
-<p>Note that both $q_{\phi}(\mathbf{z}|x))$ and $p(z)$ are diagonal gaussians. The KL divergence between diagonal gaussians can be <a href="https://stats.stackexchange.com/questions/318748/deriving-the-kl-divergence-loss-for-vaes">derived analytically</a>, and is given by:</p>
+<p>Note that both $q_{\phi}(z|x))$ and $p(z)$ are diagonal gaussians. The KL divergence between diagonal gaussians can be <a href="https://stats.stackexchange.com/questions/318748/deriving-the-kl-divergence-loss-for-vaes">derived analytically</a>, and the KL Divergence between a gaussian parameterized by $\mu$ and $\sigma$ and the standard normal is given by:</p>
 <p>{% raw %}
 $$  \frac{1}{2} \left[-(\sum_{i}{\log{\sigma_i^2} + 1}) + \sum_{i}(\sigma_i^2) + \sum_{i}{\mu_i^{2}} \right]$$
 {% endraw %}</p>
-<p>TODO: see Kigma 2014 for real derivation - this one is off (or Kigma's is off, idk...)</p>
 
 </div>
 </div>
@@ -128,7 +127,7 @@ $$  \frac{1}{2} \left[-(\sum_{i}{\log{\sigma_i^2} + 1}) + \sum_{i}(\sigma_i^2) +
 <div class="output_markdown rendered_html output_subarea ">
 <h4 id="kl_div_stdnorm" class="doc_header"><code>kl_div_stdnorm</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L22" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>kl_div_stdnorm</code>(<strong><code>mu</code></strong>, <strong><code>logvar</code></strong>)</p>
 </blockquote>
-<p>Returns element wise KL Divergence across batch</p>
+<p>Returns element wise KL Divergence between standard normal and gaussian parameterized by (<code>mu</code>, <code>logvar</code>) across batch</p>
 
 </div>
 
@@ -171,7 +170,7 @@ $$  \frac{1}{2} \left[-(\sum_{i}{\log{\sigma_i^2} + 1}) + \sum_{i}(\sigma_i^2) +
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="n">kl_div_stdnorm</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])))</span> <span class="o">==</span> <span class="mi">0</span>
 </pre></div>
 
     </div>
@@ -183,8 +182,19 @@ $$  \frac{1}{2} \left[-(\sum_{i}{\log{\sigma_i^2} + 1}) + \sum_{i}(\sigma_i^2) +
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let $\mu_1$ = 2, $\sigma_1^2$ = 4, then we would have
-$$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{1}{2} + log{\frac{1}{4}}</p>
+<p>Let $\mu$ = 2, $\sigma_1$ = 4, then we would have
+{% raw %}
+$$\frac{1}{2} \left[-(\log{4} + 1) + (4) + {2^{2}} \right]$$
+{% endraw %}</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>{% raw %}
+$$  \frac{1}{2} \left[-(\sum_{i}\log{4 + 1}) + \sum_{i}(4^2) + \sum_{i}{2^{2}} \right]$$
+{% endraw %}</p>
 
 </div>
 </div>
@@ -196,7 +206,7 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="n">kl_div_stdnorm</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mi">2</span><span class="p">]]),</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mi">4</span><span class="p">]])))</span> <span class="o">==</span> <span class="mf">.5</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mi">4</span><span class="p">]])))</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -208,8 +218,7 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Euclidean-Distance">Euclidean Distance<a class="anchor-link" href="#Euclidean-Distance"> </a></h2><p>(batch-wise)</p>
-
+<h2 id="Euclidean-Distance">Euclidean Distance<a class="anchor-link" href="#Euclidean-Distance"> </a></h2>
 </div>
 </div>
 </div>
@@ -226,6 +235,7 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 <div class="output_markdown rendered_html output_subarea ">
 <h4 id="euclidean" class="doc_header"><code>euclidean</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L27" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>euclidean</code>(<strong><code>x_1</code></strong>, <strong><code>x_2</code></strong>)</p>
 </blockquote>
+<p>batch-wise euclidean distance</p>
 
 </div>
 
@@ -297,7 +307,7 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="show" class="doc_header"><code>show</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L31" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show</code>(<strong><code>imgs</code></strong>)</p>
+<h4 id="show" class="doc_header"><code>show</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L32" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show</code>(<strong><code>imgs</code></strong>)</p>
 </blockquote>
 <p>Plots list of images</p>
 
@@ -329,7 +339,7 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="show_batch" class="doc_header"><code>show_batch</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L45" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show_batch</code>(<strong><code>batch</code></strong>:<code>Tensor</code>)</p>
+<h4 id="show_batch" class="doc_header"><code>show_batch</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L46" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>show_batch</code>(<strong><code>batch</code></strong>:<code>Tensor</code>)</p>
 </blockquote>
 <p>Shows 4D batch of tensors</p>
 
@@ -582,8 +592,9 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="disable_gradient" class="doc_header"><code>disable_gradient</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L53" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>disable_gradient</code>(<strong><code>model</code></strong>:<code>Module</code>)</p>
+<h4 id="disable_gradient" class="doc_header"><code>disable_gradient</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L54" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>disable_gradient</code>(<strong><code>model</code></strong>:<code>Module</code>)</p>
 </blockquote>
+<p>disable the gradients of a model</p>
 
 </div>
 
@@ -613,8 +624,9 @@ $$KL(q, p) = \log \frac{1}{4} + \frac{4 + (2-0)^2}{2} - \frac{1}{2} = 4 - \frac{
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="enable_gradient" class="doc_header"><code>enable_gradient</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L58" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>enable_gradient</code>(<strong><code>model</code></strong>:<code>Module</code>)</p>
+<h4 id="enable_gradient" class="doc_header"><code>enable_gradient</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L60" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>enable_gradient</code>(<strong><code>model</code></strong>:<code>Module</code>)</p>
 </blockquote>
+<p>enable the gradients of a model</p>
 
 </div>
 
@@ -857,7 +869,7 @@ epoch 4
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="save_model" class="doc_header"><code>save_model</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L63" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>save_model</code>(<strong><code>model</code></strong>, <strong><code>path</code></strong>)</p>
+<h4 id="save_model" class="doc_header"><code>save_model</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L66" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>save_model</code>(<strong><code>model</code></strong>, <strong><code>path</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -958,8 +970,9 @@ epoch 4
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="load_model" class="doc_header"><code>load_model</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L67" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>load_model</code>(<strong><code>model</code></strong>, <strong><code>path</code></strong>)</p>
+<h4 id="load_model" class="doc_header"><code>load_model</code><a href="https://github.com/oliveradk/cult/tree/master/cult/core/utils.py#L71" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>load_model</code>(<strong><code>model</code></strong>, <strong><code>path</code></strong>)</p>
 </blockquote>
+<p>save <code>model</code> to subdir of PARAM_PATH given by <code>path</code></p>
 
 </div>
 
