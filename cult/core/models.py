@@ -10,7 +10,6 @@ from torch import nn
 from torch.nn import functional as F
 import numpy as np
 import copy
-from cmaes import CMA
 from ..config import DATA_PATH
 from .utils import rec_likelihood, kl_div_stdnorm, disable_gradient, enable_gradient
 
