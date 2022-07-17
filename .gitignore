@@ -142,5 +142,11 @@ checklink/cookies.txt
 .gitconfig
 
 # ignore storage dirs
-vase/data
+cult/data
+
+#ignore training logs
+cult/logs
+
+#ignore model params
+cult/params
 
