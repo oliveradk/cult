@@ -147,6 +147,4 @@ cult/data
 #ignore training logs
 cult/logs
 
-#ignore model params
-cult/params
 
